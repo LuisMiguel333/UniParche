@@ -10,9 +10,9 @@
 
 | Nombre | Rol |
 |---|---|
-| Luis Miguel Cardona Jimenez | Backend — Entidades, DbContext, Repositorios, Migraciones |
-| *(Compañero 2)* | Backend — Services, DTOs, AutoMapper, Controllers |
-| *(Compañero 3)* | Frontend — Vistas, Consumo de API, Navegación |
+| Luis Miguel Cardona Jimenez | Backend |
+| *Pastor Felipe Garces Zapata* | Backend  |
+| *Moisés De Jesús González Navarro* | Backend  |
 
 ---
 
@@ -33,10 +33,10 @@ UniParche es una red social donde estudiantes universitarios colombianos (ITM, E
 | Capa | Tecnología |
 |---|---|
 | Backend | .NET 8 Web API |
-| ORM | Entity Framework Core (Code-First) |
-| Base de datos | PostgreSQL (Supabase) |
-| Frontend | React |
-| Documentación API | Swagger / OpenAPI |
+| ORM | pendiente |
+| Base de datos | pendiente |
+| Frontend | React o angular  |
+| Documentación API | Swagger |
 | Control de versiones | GitHub |
 
 ---

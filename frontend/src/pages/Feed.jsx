@@ -1,4 +1,6 @@
-const publicaciones = [
+import { useState } from 'react'
+
+const publicacionesIniciales = [
   {
     id: 1,
     autor: 'Valentina Ríos',
@@ -28,7 +30,7 @@ const publicaciones = [
   },
 ]
 
-function TarjetaPublicacion({ publicacion }) {
+function TarjetaPublicacion({ publicacion, onLike }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -42,19 +44,34 @@ function TarjetaPublicacion({ publicacion }) {
         <span className="ml-auto text-gray-600 text-xs">{publicacion.fecha}</span>
       </div>
       <p className="text-gray-300 text-sm">{publicacion.contenido}</p>
-      <button className="self-start text-gray-500 text-xs hover:text-purple-400 transition-colors">
-        {publicacion.likes} likes
+      <button
+        onClick={() => onLike(publicacion.id)}
+        className="self-start text-gray-500 text-xs hover:text-purple-400 transition-colors"
+      >
+        ♥ {publicacion.likes} likes
       </button>
     </div>
   )
 }
 
 function Feed() {
+  const [publicaciones, setPublicaciones] = useState(publicacionesIniciales)
+
+  const darLike = (id) => {
+    setPublicaciones(publicaciones.map(p =>
+      p.id === id ? { ...p, likes: p.likes + 1 } : p
+    ))
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-white">Feed</h1>
       {publicaciones.map(publicacion => (
-        <TarjetaPublicacion key={publicacion.id} publicacion={publicacion} />
+        <TarjetaPublicacion
+          key={publicacion.id}
+          publicacion={publicacion}
+          onLike={darLike}
+        />
       ))}
     </div>
   )

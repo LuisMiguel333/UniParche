@@ -11,8 +11,8 @@
 | Nombre | Rol |
 |---|---|
 | Luis Miguel Cardona Jimenez | Backend |
-| *Pastor Felipe Garces Zapata* | Backend  |
-| *Moisés De Jesús González Navarro* | Backend  |
+| Pastor Felipe Garces Zapata | Frontend  |
+| Moisés De Jesús González Navarro | Backend  |
 
 ---
 
@@ -35,7 +35,7 @@ UniParche es una red social donde estudiantes universitarios colombianos (ITM, E
 | Backend | .NET 8 Web API |
 | ORM | pendiente |
 | Base de datos | pendiente |
-| Frontend | React o angular  |
+| Frontend | React |
 | Documentación API | Swagger |
 | Control de versiones | GitHub |
 

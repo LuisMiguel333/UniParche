@@ -12,8 +12,8 @@ function Navbar() {
   return (
     <nav className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between sticky top-0 z-10">
       <div className="flex items-center gap-8">
-        <Link to="/" className="text-purple-400 font-bold text-xl tracking-tight">
-          UniParche
+        <Link to="/" className="font-bold text-xl tracking-tight">
+          <span className="text-white">Uni</span><span className="text-purple-400">Parche</span>
         </Link>
         <div className="flex gap-6">
           {links.map(link => (

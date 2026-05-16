@@ -31,6 +31,26 @@ const gruposMock = [
     unido: false,
     rol: null,
   },
+  {
+    id: 4,
+    nombre: 'Programación Web - ITM',
+    materia: 'Programación',
+    universidad: 'ITM',
+    miembros: 9,
+    creador: 'Felipe Garces',
+    unido: false,
+    rol: null,
+  },
+  {
+    id: 5,
+    nombre: 'Estadística UdeA',
+    materia: 'Estadística',
+    universidad: 'UdeA',
+    miembros: 6,
+    creador: 'Sebastián Mora',
+    unido: false,
+    rol: null,
+  },
 ]
 
 const formularioVacio = {
@@ -104,6 +124,16 @@ function Grupos() {
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [formulario, setFormulario] = useState(formularioVacio)
   const [errores, setErrores] = useState(erroresVacios)
+  const [filtroUniversidad, setFiltroUniversidad] = useState('')
+  const [filtroMateria, setFiltroMateria] = useState('')
+
+  const gruposFiltrados = listaGrupos.filter(g => {
+    const porUniversidad = filtroUniversidad ? g.universidad === filtroUniversidad : true
+    const porMateria = filtroMateria
+      ? g.materia.toLowerCase().includes(filtroMateria.toLowerCase())
+      : true
+    return porUniversidad && porMateria
+  })
 
   const handleChange = (e) => {
     setFormulario({ ...formulario, [e.target.name]: e.target.value })
@@ -169,6 +199,8 @@ function Grupos() {
     ))
   }
 
+  const universidadesUnicas = [...new Set(listaGrupos.map(g => g.universidad))]
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -184,6 +216,51 @@ function Grupos() {
           {mostrarFormulario ? 'Cancelar' : '+ Crear grupo'}
         </button>
       </div>
+
+      <div className="flex gap-3">
+        <select
+          value={filtroUniversidad}
+          onChange={(e) => setFiltroUniversidad(e.target.value)}
+          className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-purple-500"
+        >
+          <option value="">Todas las universidades</option>
+          {universidadesUnicas.map(u => (
+            <option key={u} value={u}>{u}</option>
+          ))}
+        </select>
+        <input
+          value={filtroMateria}
+          onChange={(e) => setFiltroMateria(e.target.value)}
+          placeholder="Buscar por materia..."
+          className="flex-1 bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-purple-500"
+        />
+        {(filtroUniversidad || filtroMateria) && (
+          <button
+            onClick={() => {
+              setFiltroUniversidad('')
+              setFiltroMateria('')
+            }}
+            className="text-sm px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
+
+      {gruposFiltrados.length === 0 && (
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+          <p className="text-gray-500 text-sm">No hay grupos que coincidan con tu búsqueda.</p>
+          <button
+            onClick={() => {
+              setFiltroUniversidad('')
+              setFiltroMateria('')
+            }}
+            className="mt-3 text-purple-400 text-xs hover:underline"
+          >
+            Ver todos los grupos
+          </button>
+        </div>
+      )}
 
       {mostrarFormulario && (
         <div className="bg-gray-900 border border-purple-800 rounded-xl p-5 flex flex-col gap-4">
@@ -230,7 +307,7 @@ function Grupos() {
         </div>
       )}
 
-      {listaGrupos.map(grupo => (
+      {gruposFiltrados.map(grupo => (
         <TarjetaGrupo
           key={grupo.id}
           grupo={grupo}

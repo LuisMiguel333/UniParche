@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 
 function Inicio() {
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center px-4 gap-10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950 flex flex-col items-center justify-center px-4 gap-10">
       <div className="text-center flex flex-col gap-4">
-        <h1 className="text-5xl font-bold text-white">
-          Uni<span className="text-purple-400">Parche</span>
+        <h1 className="text-5xl font-bold">
+          <span className="text-white">Uni</span><span className="text-purple-400">Parche</span>
         </h1>
         <p className="text-gray-400 text-lg max-w-md">
           La red social exclusiva para estudiantes universitarios colombianos.
@@ -29,17 +29,17 @@ function Inicio() {
       </div>
 
       <div className="grid grid-cols-3 gap-4 max-w-lg w-full">
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center flex flex-col gap-2">
+        <div className="bg-gray-900 bg-opacity-60 border border-gray-800 rounded-xl p-4 text-center flex flex-col gap-2">
           <span className="text-2xl">📰</span>
           <p className="text-white text-sm font-medium">Feed social</p>
           <p className="text-gray-500 text-xs">Publicaciones de tu universidad</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center flex flex-col gap-2">
+        <div className="bg-gray-900 bg-opacity-60 border border-gray-800 rounded-xl p-4 text-center flex flex-col gap-2">
           <span className="text-2xl">🎉</span>
           <p className="text-white text-sm font-medium">Parches</p>
           <p className="text-gray-500 text-xs">Eventos y salidas universitarias</p>
         </div>
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 text-center flex flex-col gap-2">
+        <div className="bg-gray-900 bg-opacity-60 border border-gray-800 rounded-xl p-4 text-center flex flex-col gap-2">
           <span className="text-2xl">👥</span>
           <p className="text-white text-sm font-medium">Grupos</p>
           <p className="text-gray-500 text-xs">Estudia con otros estudiantes</p>

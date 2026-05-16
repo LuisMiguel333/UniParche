@@ -1,5 +1,12 @@
 import { useState } from 'react'
-import { Heart, MessageCircle, Send } from 'lucide-react'
+
+const MAX_CARACTERES = 280
+
+const imagenesDemo = [
+  'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&q=80',
+  'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80',
+  'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=600&q=80',
+]
 
 const publicacionesIniciales = [
   {
@@ -10,6 +17,7 @@ const publicacionesIniciales = [
     contenido: 'Alguien más tiene el parcial de cálculo mañana? 😭',
     fecha: 'Hace 10 minutos',
     likes: 24,
+    imagen: null,
     comentarios: [
       { id: 1, autor: 'Sebastián Mora', texto: 'Yo también! Qué parcial tan difícil.', fecha: 'Hace 5 minutos' },
     ],
@@ -22,6 +30,7 @@ const publicacionesIniciales = [
     contenido: 'Terminé el semestre con todas las materias. No lo puedo creer.',
     fecha: 'Hace 1 hora',
     likes: 87,
+    imagen: imagenesDemo[0],
     comentarios: [],
   },
   {
@@ -32,14 +41,13 @@ const publicacionesIniciales = [
     contenido: 'Buscando grupo para el proyecto de finanzas. Somos 2, necesitamos 1 más.',
     fecha: 'Hace 3 horas',
     likes: 5,
+    imagen: imagenesDemo[1],
     comentarios: [
       { id: 1, autor: 'Luis M.', texto: 'Yo me uno! Mándame mensaje.', fecha: 'Hace 2 horas' },
       { id: 2, autor: 'Valentina Ríos', texto: 'También estoy interesada.', fecha: 'Hace 1 hora' },
     ],
   },
 ]
-
-const MAX_CARACTERES = 280
 
 function SeccionComentarios({ comentarios, onAgregarComentario }) {
   const [texto, setTexto] = useState('')
@@ -55,10 +63,9 @@ function SeccionComentarios({ comentarios, onAgregarComentario }) {
     <div className="flex flex-col gap-2">
       <button
         onClick={() => setMostrar(!mostrar)}
-        className="self-start flex items-center gap-1.5 text-gray-500 text-xs hover:text-purple-400 transition-colors"
+        className="self-start text-gray-500 text-xs hover:text-purple-400 transition-colors"
       >
-        <MessageCircle size={13} />
-        {mostrar ? 'Ocultar comentarios' : `${comentarios.length} comentarios`}
+        💬 {mostrar ? 'Ocultar comentarios' : `${comentarios.length} comentarios`}
       </button>
 
       {mostrar && (
@@ -88,9 +95,9 @@ function SeccionComentarios({ comentarios, onAgregarComentario }) {
             />
             <button
               onClick={handleAgregar}
-              className="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+              className="text-xs px-3 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
             >
-              <Send size={13} />
+              Enviar
             </button>
           </div>
         </div>
@@ -108,39 +115,53 @@ function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario }) {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors cursor-default">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
-          {publicacion.autor[0]}
+    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors">
+      <div className="p-5 flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+            {publicacion.autor[0]}
+          </div>
+          <div>
+            <p className="text-white font-semibold text-sm">{publicacion.autor}</p>
+            <p className="text-gray-500 text-xs">{publicacion.universidad} · {publicacion.carrera}</p>
+          </div>
+          <span className="ml-auto text-gray-600 text-xs">{publicacion.fecha}</span>
         </div>
-        <div>
-          <p className="text-white font-semibold text-sm">{publicacion.autor}</p>
-          <p className="text-gray-500 text-xs">{publicacion.universidad} · {publicacion.carrera}</p>
-        </div>
-        <span className="ml-auto text-gray-600 text-xs">{publicacion.fecha}</span>
+        <p className="text-gray-300 text-sm">{publicacion.contenido}</p>
       </div>
-      <p className="text-gray-300 text-sm">{publicacion.contenido}</p>
-      <div className="flex gap-4">
+
+      {publicacion.imagen && (
+        <img
+          src={publicacion.imagen}
+          alt="Imagen de la publicación"
+          className="w-full max-h-72 object-cover"
+        />
+      )}
+
+      <div className="px-5 py-3 flex gap-4 border-t border-gray-800">
         <button
           onClick={handleLike}
           className={`flex items-center gap-1.5 text-xs transition-colors ${
             liked ? 'text-purple-400' : 'text-gray-500 hover:text-purple-400'
           }`}
         >
-          <Heart size={13} fill={liked ? 'currentColor' : 'none'} />
-          {publicacion.likes} likes
+          {liked ? '♥' : '♡'} {publicacion.likes} likes
         </button>
       </div>
-      <SeccionComentarios
-        comentarios={publicacion.comentarios}
-        onAgregarComentario={(texto) => onAgregarComentario(publicacion.id, texto)}
-      />
+
+      <div className="px-5 pb-4">
+        <SeccionComentarios
+          comentarios={publicacion.comentarios}
+          onAgregarComentario={(texto) => onAgregarComentario(publicacion.id, texto)}
+        />
+      </div>
     </div>
   )
 }
 
 function FormularioPublicacion({ onPublicar }) {
   const [contenido, setContenido] = useState('')
+  const [conImagen, setConImagen] = useState(false)
   const [error, setError] = useState('')
 
   const handlePublicar = () => {
@@ -152,8 +173,9 @@ function FormularioPublicacion({ onPublicar }) {
       setError('La publicación debe tener al menos 5 caracteres')
       return
     }
-    onPublicar(contenido.trim())
+    onPublicar(contenido.trim(), conImagen)
     setContenido('')
+    setConImagen(false)
     setError('')
   }
 
@@ -180,6 +202,23 @@ function FormularioPublicacion({ onPublicar }) {
           className="flex-1 bg-gray-800 text-white text-sm rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-purple-500 resize-none transition-colors"
         />
       </div>
+
+      <div className="flex items-center gap-3 ml-13">
+        <button
+          onClick={() => setConImagen(!conImagen)}
+          className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+            conImagen
+              ? 'border-purple-500 text-purple-400 bg-purple-900'
+              : 'border-gray-700 text-gray-500 hover:border-gray-500'
+          }`}
+        >
+          📷 {conImagen ? 'Foto incluida' : 'Agregar foto'}
+        </button>
+        {conImagen && (
+          <p className="text-gray-600 text-xs">Se agregará una foto de ejemplo</p>
+        )}
+      </div>
+
       {error && <p className="text-red-400 text-xs">{error}</p>}
       <div className="flex items-center justify-between">
         <span className={`text-xs ${lleno ? 'text-red-400' : casiLleno ? 'text-amber-400' : 'text-gray-600'}`}>
@@ -189,9 +228,7 @@ function FormularioPublicacion({ onPublicar }) {
           onClick={handlePublicar}
           disabled={lleno}
           className={`text-sm px-5 py-2 rounded-lg text-white transition-colors font-medium ${
-            lleno
-              ? 'bg-gray-700 cursor-not-allowed'
-              : 'bg-purple-600 hover:bg-purple-700'
+            lleno ? 'bg-gray-700 cursor-not-allowed' : 'bg-purple-600 hover:bg-purple-700'
           }`}
         >
           Publicar
@@ -224,7 +261,7 @@ function Feed() {
     ))
   }
 
-  const crearPublicacion = (contenido) => {
+  const crearPublicacion = (contenido, conImagen) => {
     const nueva = {
       id: publicaciones.length + 1,
       autor: 'Felipe Garces',
@@ -233,6 +270,7 @@ function Feed() {
       contenido,
       fecha: 'Ahora',
       likes: 0,
+      imagen: conImagen ? imagenesDemo[2] : null,
       comentarios: [],
     }
     setPublicaciones([nueva, ...publicaciones])

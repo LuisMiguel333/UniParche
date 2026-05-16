@@ -1,4 +1,6 @@
-const grupos = [
+import { useState } from 'react'
+
+const gruposMock = [
   {
     id: 1,
     nombre: 'Cálculo III - ITM',
@@ -6,6 +8,7 @@ const grupos = [
     universidad: 'ITM',
     miembros: 12,
     creador: 'Valentina Ríos',
+    unido: false,
   },
   {
     id: 2,
@@ -14,6 +17,7 @@ const grupos = [
     universidad: 'UdeA',
     miembros: 8,
     creador: 'Sebastián Mora',
+    unido: false,
   },
   {
     id: 3,
@@ -22,10 +26,11 @@ const grupos = [
     universidad: 'EAFIT',
     miembros: 5,
     creador: 'Daniela Castro',
+    unido: false,
   },
 ]
 
-function TarjetaGrupo({ grupo }) {
+function TarjetaGrupo({ grupo, onUnirse }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
       <div className="flex items-start justify-between">
@@ -38,19 +43,40 @@ function TarjetaGrupo({ grupo }) {
         </span>
       </div>
       <p className="text-gray-500 text-xs">Creado por {grupo.creador}</p>
-      <button className="self-start text-sm px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors">
-        Unirme al grupo
+      <button
+        onClick={() => onUnirse(grupo.id)}
+        className={`self-start text-sm px-4 py-2 rounded-lg transition-colors ${
+          grupo.unido
+            ? 'bg-gray-700 text-gray-300 hover:bg-red-900 hover:text-red-400'
+            : 'bg-purple-600 hover:bg-purple-700 text-white'
+        }`}
+      >
+        {grupo.unido ? 'Salir del grupo' : 'Unirme al grupo'}
       </button>
     </div>
   )
 }
 
 function Grupos() {
+  const [listaGrupos, setListaGrupos] = useState(gruposMock)
+
+  const toggleGrupo = (id) => {
+    setListaGrupos(listaGrupos.map(g =>
+      g.id === id
+        ? { ...g, unido: !g.unido, miembros: g.unido ? g.miembros - 1 : g.miembros + 1 }
+        : g
+    ))
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-white">Grupos</h1>
-      {grupos.map(grupo => (
-        <TarjetaGrupo key={grupo.id} grupo={grupo} />
+      {listaGrupos.map(grupo => (
+        <TarjetaGrupo
+          key={grupo.id}
+          grupo={grupo}
+          onUnirse={toggleGrupo}
+        />
       ))}
     </div>
   )

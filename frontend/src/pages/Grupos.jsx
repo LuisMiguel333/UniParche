@@ -9,6 +9,7 @@ const gruposMock = [
     miembros: 12,
     creador: 'Valentina Ríos',
     unido: false,
+    rol: null,
   },
   {
     id: 2,
@@ -18,6 +19,7 @@ const gruposMock = [
     miembros: 8,
     creador: 'Sebastián Mora',
     unido: false,
+    rol: null,
   },
   {
     id: 3,
@@ -27,20 +29,28 @@ const gruposMock = [
     miembros: 5,
     creador: 'Daniela Castro',
     unido: false,
+    rol: null,
   },
 ]
 
 function TarjetaGrupo({ grupo, onUnirse }) {
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-white font-semibold">{grupo.nombre}</p>
           <p className="text-gray-500 text-xs mt-1">{grupo.universidad} · {grupo.materia}</p>
         </div>
-        <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-          {grupo.miembros} miembros
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
+            👥 {grupo.miembros} miembros
+          </span>
+          {grupo.unido && (
+            <span className="text-xs px-2 py-1 rounded-full bg-purple-900 text-purple-300">
+              {grupo.rol === 'Administrador' ? '👑 Administrador' : '🎓 Miembro'}
+            </span>
+          )}
+        </div>
       </div>
       <p className="text-gray-500 text-xs">Creado por {grupo.creador}</p>
       <button
@@ -63,7 +73,12 @@ function Grupos() {
   const toggleGrupo = (id) => {
     setListaGrupos(listaGrupos.map(g =>
       g.id === id
-        ? { ...g, unido: !g.unido, miembros: g.unido ? g.miembros - 1 : g.miembros + 1 }
+        ? {
+            ...g,
+            unido: !g.unido,
+            miembros: g.unido ? g.miembros - 1 : g.miembros + 1,
+            rol: g.unido ? null : 'Miembro',
+          }
         : g
     ))
   }

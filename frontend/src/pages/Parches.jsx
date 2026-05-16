@@ -57,7 +57,7 @@ function TarjetaParche({ parche, onUnirse }) {
   const lleno = parche.inscritos >= parche.cupos
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-white font-semibold">{parche.titulo}</p>

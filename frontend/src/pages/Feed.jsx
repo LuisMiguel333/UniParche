@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Heart, MessageCircle, Send } from 'lucide-react'
 
 const publicacionesIniciales = [
   {
@@ -9,6 +10,9 @@ const publicacionesIniciales = [
     contenido: 'Alguien más tiene el parcial de cálculo mañana? 😭',
     fecha: 'Hace 10 minutos',
     likes: 24,
+    comentarios: [
+      { id: 1, autor: 'Sebastián Mora', texto: 'Yo también! Qué parcial tan difícil.', fecha: 'Hace 5 minutos' },
+    ],
   },
   {
     id: 2,
@@ -18,6 +22,7 @@ const publicacionesIniciales = [
     contenido: 'Terminé el semestre con todas las materias. No lo puedo creer.',
     fecha: 'Hace 1 hora',
     likes: 87,
+    comentarios: [],
   },
   {
     id: 3,
@@ -27,12 +32,83 @@ const publicacionesIniciales = [
     contenido: 'Buscando grupo para el proyecto de finanzas. Somos 2, necesitamos 1 más.',
     fecha: 'Hace 3 horas',
     likes: 5,
+    comentarios: [
+      { id: 1, autor: 'Luis M.', texto: 'Yo me uno! Mándame mensaje.', fecha: 'Hace 2 horas' },
+      { id: 2, autor: 'Valentina Ríos', texto: 'También estoy interesada.', fecha: 'Hace 1 hora' },
+    ],
   },
 ]
 
-function TarjetaPublicacion({ publicacion, onLike }) {
+const MAX_CARACTERES = 280
+
+function SeccionComentarios({ comentarios, onAgregarComentario }) {
+  const [texto, setTexto] = useState('')
+  const [mostrar, setMostrar] = useState(false)
+
+  const handleAgregar = () => {
+    if (!texto.trim()) return
+    onAgregarComentario(texto.trim())
+    setTexto('')
+  }
+
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={() => setMostrar(!mostrar)}
+        className="self-start flex items-center gap-1.5 text-gray-500 text-xs hover:text-purple-400 transition-colors"
+      >
+        <MessageCircle size={13} />
+        {mostrar ? 'Ocultar comentarios' : `${comentarios.length} comentarios`}
+      </button>
+
+      {mostrar && (
+        <div className="flex flex-col gap-3 mt-1">
+          {comentarios.length === 0 && (
+            <p className="text-gray-600 text-xs">Sin comentarios aún. Sé el primero.</p>
+          )}
+          {comentarios.map(comentario => (
+            <div key={comentario.id} className="flex gap-2">
+              <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                {comentario.autor[0]}
+              </div>
+              <div className="bg-gray-800 rounded-xl px-3 py-2 flex flex-col gap-0.5 flex-1">
+                <p className="text-white text-xs font-semibold">{comentario.autor}</p>
+                <p className="text-gray-300 text-xs">{comentario.texto}</p>
+                <p className="text-gray-600 text-xs">{comentario.fecha}</p>
+              </div>
+            </div>
+          ))}
+          <div className="flex gap-2 mt-1">
+            <input
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAgregar()}
+              placeholder="Escribe un comentario..."
+              className="flex-1 bg-gray-800 text-white text-xs rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-purple-500"
+            />
+            <button
+              onClick={handleAgregar}
+              className="p-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+            >
+              <Send size={13} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario }) {
+  const [liked, setLiked] = useState(false)
+
+  const handleLike = () => {
+    setLiked(!liked)
+    onLike(publicacion.id)
+  }
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors cursor-default">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
           {publicacion.autor[0]}
@@ -44,12 +120,83 @@ function TarjetaPublicacion({ publicacion, onLike }) {
         <span className="ml-auto text-gray-600 text-xs">{publicacion.fecha}</span>
       </div>
       <p className="text-gray-300 text-sm">{publicacion.contenido}</p>
-      <button
-        onClick={() => onLike(publicacion.id)}
-        className="self-start text-gray-500 text-xs hover:text-purple-400 transition-colors"
-      >
-        ♥ {publicacion.likes} likes
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-1.5 text-xs transition-colors ${
+            liked ? 'text-purple-400' : 'text-gray-500 hover:text-purple-400'
+          }`}
+        >
+          <Heart size={13} fill={liked ? 'currentColor' : 'none'} />
+          {publicacion.likes} likes
+        </button>
+      </div>
+      <SeccionComentarios
+        comentarios={publicacion.comentarios}
+        onAgregarComentario={(texto) => onAgregarComentario(publicacion.id, texto)}
+      />
+    </div>
+  )
+}
+
+function FormularioPublicacion({ onPublicar }) {
+  const [contenido, setContenido] = useState('')
+  const [error, setError] = useState('')
+
+  const handlePublicar = () => {
+    if (!contenido.trim()) {
+      setError('Escribe algo antes de publicar')
+      return
+    }
+    if (contenido.trim().length < 5) {
+      setError('La publicación debe tener al menos 5 caracteres')
+      return
+    }
+    onPublicar(contenido.trim())
+    setContenido('')
+    setError('')
+  }
+
+  const restantes = MAX_CARACTERES - contenido.length
+  const casiLleno = restantes <= 30
+  const lleno = restantes < 0
+
+  return (
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+          F
+        </div>
+        <textarea
+          value={contenido}
+          onChange={(e) => {
+            if (e.target.value.length <= MAX_CARACTERES) {
+              setContenido(e.target.value)
+              setError('')
+            }
+          }}
+          placeholder="¿Qué está pasando en tu universidad?"
+          rows={3}
+          className="flex-1 bg-gray-800 text-white text-sm rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-purple-500 resize-none transition-colors"
+        />
+      </div>
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+      <div className="flex items-center justify-between">
+        <span className={`text-xs ${lleno ? 'text-red-400' : casiLleno ? 'text-amber-400' : 'text-gray-600'}`}>
+          {restantes} caracteres restantes
+        </span>
+        <button
+          onClick={handlePublicar}
+          disabled={lleno}
+          className={`text-sm px-5 py-2 rounded-lg text-white transition-colors font-medium ${
+            lleno
+              ? 'bg-gray-700 cursor-not-allowed'
+              : 'bg-purple-600 hover:bg-purple-700'
+          }`}
+        >
+          Publicar
+        </button>
+      </div>
     </div>
   )
 }
@@ -63,14 +210,44 @@ function Feed() {
     ))
   }
 
+  const agregarComentario = (idPublicacion, texto) => {
+    setPublicaciones(publicaciones.map(p =>
+      p.id === idPublicacion
+        ? {
+            ...p,
+            comentarios: [
+              ...p.comentarios,
+              { id: p.comentarios.length + 1, autor: 'Tú', texto, fecha: 'Ahora' },
+            ],
+          }
+        : p
+    ))
+  }
+
+  const crearPublicacion = (contenido) => {
+    const nueva = {
+      id: publicaciones.length + 1,
+      autor: 'Felipe Garces',
+      universidad: 'ITM',
+      carrera: 'Programación Web',
+      contenido,
+      fecha: 'Ahora',
+      likes: 0,
+      comentarios: [],
+    }
+    setPublicaciones([nueva, ...publicaciones])
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-white">Feed</h1>
+      <FormularioPublicacion onPublicar={crearPublicacion} />
       {publicaciones.map(publicacion => (
         <TarjetaPublicacion
           key={publicacion.id}
           publicacion={publicacion}
           onLike={darLike}
+          onAgregarComentario={agregarComentario}
         />
       ))}
     </div>

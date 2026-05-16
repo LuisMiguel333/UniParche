@@ -33,6 +33,20 @@ const gruposMock = [
   },
 ]
 
+const formularioVacio = {
+  nombre: '',
+  materia: '',
+  universidad: '',
+}
+
+const erroresVacios = {
+  nombre: '',
+  materia: '',
+  universidad: '',
+}
+
+const universidades = ['ITM', 'UdeA', 'EAFIT', 'UPB', 'CES', 'Unal', 'Otra']
+
 function TarjetaGrupo({ grupo, onUnirse }) {
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors">
@@ -67,8 +81,80 @@ function TarjetaGrupo({ grupo, onUnirse }) {
   )
 }
 
+function CampoFormulario({ label, name, value, onChange, error, placeholder }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-gray-400 text-xs">{label}</label>
+      <input
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className={`bg-gray-800 text-white text-sm rounded-lg px-4 py-2 outline-none border transition-colors ${
+          error ? 'border-red-500' : 'border-gray-700 focus:border-purple-500'
+        }`}
+      />
+      {error && <p className="text-red-400 text-xs">{error}</p>}
+    </div>
+  )
+}
+
 function Grupos() {
   const [listaGrupos, setListaGrupos] = useState(gruposMock)
+  const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [formulario, setFormulario] = useState(formularioVacio)
+  const [errores, setErrores] = useState(erroresVacios)
+
+  const handleChange = (e) => {
+    setFormulario({ ...formulario, [e.target.name]: e.target.value })
+    setErrores({ ...errores, [e.target.name]: '' })
+  }
+
+  const validar = () => {
+    const nuevosErrores = { ...erroresVacios }
+    let valido = true
+
+    if (!formulario.nombre.trim()) {
+      nuevosErrores.nombre = 'El nombre es obligatorio'
+      valido = false
+    } else if (formulario.nombre.trim().length < 5) {
+      nuevosErrores.nombre = 'El nombre debe tener al menos 5 caracteres'
+      valido = false
+    }
+
+    if (!formulario.materia.trim()) {
+      nuevosErrores.materia = 'La materia es obligatoria'
+      valido = false
+    }
+
+    if (!formulario.universidad) {
+      nuevosErrores.universidad = 'Selecciona una universidad'
+      valido = false
+    }
+
+    setErrores(nuevosErrores)
+    return valido
+  }
+
+  const crearGrupo = () => {
+    if (!validar()) return
+
+    const nuevoGrupo = {
+      id: listaGrupos.length + 1,
+      nombre: formulario.nombre.trim(),
+      materia: formulario.materia.trim(),
+      universidad: formulario.universidad,
+      miembros: 1,
+      creador: 'Felipe Garces',
+      unido: true,
+      rol: 'Administrador',
+    }
+
+    setListaGrupos([nuevoGrupo, ...listaGrupos])
+    setFormulario(formularioVacio)
+    setErrores(erroresVacios)
+    setMostrarFormulario(false)
+  }
 
   const toggleGrupo = (id) => {
     setListaGrupos(listaGrupos.map(g =>
@@ -85,7 +171,65 @@ function Grupos() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold text-white">Grupos</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-white">Grupos</h1>
+        <button
+          onClick={() => {
+            setMostrarFormulario(!mostrarFormulario)
+            setErrores(erroresVacios)
+            setFormulario(formularioVacio)
+          }}
+          className="text-sm px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+        >
+          {mostrarFormulario ? 'Cancelar' : '+ Crear grupo'}
+        </button>
+      </div>
+
+      {mostrarFormulario && (
+        <div className="bg-gray-900 border border-purple-800 rounded-xl p-5 flex flex-col gap-4">
+          <p className="text-white font-semibold">Nuevo grupo de estudio</p>
+          <CampoFormulario
+            label="Nombre del grupo"
+            name="nombre"
+            value={formulario.nombre}
+            onChange={handleChange}
+            error={errores.nombre}
+            placeholder="Ej: Cálculo III - Grupo Tarde"
+          />
+          <CampoFormulario
+            label="Materia"
+            name="materia"
+            value={formulario.materia}
+            onChange={handleChange}
+            error={errores.materia}
+            placeholder="Ej: Cálculo, Anatomía, Finanzas..."
+          />
+          <div className="flex flex-col gap-1">
+            <label className="text-gray-400 text-xs">Universidad</label>
+            <select
+              name="universidad"
+              value={formulario.universidad}
+              onChange={handleChange}
+              className={`bg-gray-800 text-white text-sm rounded-lg px-4 py-2 outline-none border transition-colors ${
+                errores.universidad ? 'border-red-500' : 'border-gray-700 focus:border-purple-500'
+              }`}
+            >
+              <option value="">Selecciona tu universidad</option>
+              {universidades.map(u => (
+                <option key={u} value={u}>{u}</option>
+              ))}
+            </select>
+            {errores.universidad && <p className="text-red-400 text-xs">{errores.universidad}</p>}
+          </div>
+          <button
+            onClick={crearGrupo}
+            className="self-start text-sm px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
+          >
+            Crear grupo
+          </button>
+        </div>
+      )}
+
       {listaGrupos.map(grupo => (
         <TarjetaGrupo
           key={grupo.id}

@@ -1,10 +1,10 @@
-namesapce UniParche.Domain.Enums
+namespace UniParche.Domain.Enums
 {
-    public enum EstadoParche
-{
-    Proximo,
-    Encurso,
-    Finalizado,
-    cancelado
-}
+    public enum EventStatus
+    {
+        Upcoming,
+        InProgress,
+        Finished,
+        Cancelled
+    }
 }

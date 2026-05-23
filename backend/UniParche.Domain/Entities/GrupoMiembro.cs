@@ -2,16 +2,16 @@ using UniParche.Domain.Enums;
 
 namespace UniParche.Domain.Entities
 {
-	public class Grupo
+	public class GroupMember
 	{
-		public int IdGrupo { get; set; }
-		public int GrupoId { get; set; }
-		public RolGrupo Rol { get; set; } = RolGrupo.Miembro;
-		public DateTime FechaUnion { get; set; } = DateTime.UtcNow;
+		public int GroupId { get; set; }
+		public int UserId { get; set; }
+		public GroupRole Role { get; set; } = GroupRole.Member;
+		public DateTime JoinDate { get; set; } = DateTime.UtcNow;
 
 		// Navigation properties
 
-		public Grupo Grupo { get; set; }
-		public Usuario Usuario { get; set; }
+		public Group Group { get; set; }
+		public Usuario User { get; set; }
 	}
 }

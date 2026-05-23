@@ -1,9 +1,9 @@
-namespace Uniparches.Domain.Enums
+namespace UniParche.Domain.Enums
 {
-	public enum RolGrupo
+	public enum GroupType
 	{
-		Estudio,
+		Study,
 		Social,
-		Deportivo
+		Sports
 	}
 }

@@ -1,10 +1,10 @@
-namespace Uniparches.Domain.Enums
+namespace UniParche.Domain.Enums
 {
-    public enum EstadoAmistad
+    public enum FriendshipStatus
     {
-        Pendiente,
-        Aceptada,
-        Rechazada,
-        Bloqueada
+        Pending,
+        Accepted,
+        Rejected,
+        Blocked
     }
 }

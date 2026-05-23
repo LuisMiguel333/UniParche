@@ -1,9 +1,9 @@
-nameospace UniParche.Domain.Enums
+namespace UniParche.Domain.Enums
 {
-    public enum EstadoAsistencia
-{
-    Pendiente,
-    Confirmada,
-    Rechazada
-}
+    public enum AttendanceStatus
+    {
+        Pending,
+        Confirmed,
+        Rejected
+    }
 }

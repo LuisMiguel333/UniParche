@@ -1,8 +1,8 @@
-namespace Uniparches.Domain.Enums
+namespace UniParche.Domain.Enums
 {
-	public enum RolGrupo
+	public enum GroupRole
 	{
-		Administrador,
-		Miembro,
+		Administrator,
+		Member
 	}
 }

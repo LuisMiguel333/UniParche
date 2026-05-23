@@ -1,19 +1,19 @@
 using UniParche.Domain.Enums;
 
-namespace Uniparche.Domain.Entities
+namespace UniParche.Domain.Entities
 {
-    public class Grupo
+    public class Group
     {
         public int Id { get; set; }
-        public string Nombre { get; set; }
-        public string Descripcion { get; set; }
-        public IdUniversidad { get; set; }
-        public string Materia { get; set; }
-        public int IdCreador { get; set; }
-        public TipoGrupo Tipo { get; set; } = TipoGrupo.Estudio;
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int UniversityId { get; set; }
+        public string Subject { get; set; }
+        public int CreatorId { get; set; }
+        public GroupType Type { get; set; } = GroupType.Study;
         // Navigation properties
-        public Universidad Universidad { get; set; }
-        public Usuario Creador { get; set; }
-        public ICollection<GrupoMiembro> Parches { get; set; } = new List<GrupoMiembro>();
+        public Universidad University { get; set; }
+        public Usuario Creator { get; set; }
+        public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
     }
 }

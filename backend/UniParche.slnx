@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="UniParche.API/UniParche.API.csproj" />
+  <Project Path="UniParche.DataAccess/UniParche.DataAccess.csproj" />
+  <Project Path="UniParche.Domain/UniParche.Domain.csproj" />
+</Solution>

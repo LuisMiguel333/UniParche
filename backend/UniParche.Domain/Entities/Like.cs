@@ -1,6 +1,6 @@
 ﻿namespace UniParche.Domain.Entities;
 
-internal class Like : AuditBase
+public class Like : AuditBase
 {
     // Foreign key
     public int UserId { get; set; }

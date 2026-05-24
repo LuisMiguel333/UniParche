@@ -143,5 +143,131 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
             .ForMember(dest => dest.ReactionType, opt => opt.MapFrom(src => src.ReactionType));
+<<<<<<< HEAD
+
+
+        // Event Mappings
+        CreateMap<CreateEventRequest, Event>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
+            .ForMember(dest => dest.EventDate, opt => opt.MapFrom(src => src.EventDate))
+            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.Status, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.EventAttendees, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateEventRequest, Event>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
+            .ForMember(dest => dest.EventDate, opt => opt.MapFrom(src => src.EventDate))
+            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.UniversityId, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.EventAttendees, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<Event, EventResponse>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
+            .ForMember(dest => dest.EventDate, opt => opt.MapFrom(src => src.EventDate))
+            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.CreatorId, opt => opt.MapFrom(src => src.CreatorId))
+            .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator != null ? src.Creator.UserName : string.Empty))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.AttendeeCount, opt => opt.MapFrom(src => src.EventAttendees != null ? src.EventAttendees.Count : 0))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
+        // Group Mappings
+        CreateMap<CreateGroupRequest, Group>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.Subject))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.Members, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateGroupRequest, Group>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.Subject))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.UniversityId, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.Members, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<Group, GroupResponse>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.Subject))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.CreatorId, opt => opt.MapFrom(src => src.CreatorId))
+            .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator != null ? src.Creator.UserName : string.Empty))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.Members != null ? src.Members.Count : 0))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
+        // Friendship Mappings
+        CreateMap<CreateFriendshipRequest, Friendship>()
+            .ForMember(dest => dest.User1Id, opt => opt.MapFrom(src => src.User1Id))
+            .ForMember(dest => dest.User2Id, opt => opt.MapFrom(src => src.User2Id))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.Status, opt => opt.Ignore())
+            .ForMember(dest => dest.Date, opt => opt.Ignore())
+            .ForMember(dest => dest.User1, opt => opt.Ignore())
+            .ForMember(dest => dest.User2, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateFriendshipRequest, Friendship>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.User1Id, opt => opt.Ignore())
+            .ForMember(dest => dest.User2Id, opt => opt.Ignore())
+            .ForMember(dest => dest.Date, opt => opt.Ignore())
+            .ForMember(dest => dest.User1, opt => opt.Ignore())
+            .ForMember(dest => dest.User2, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<Friendship, FriendshipResponse>()
+            .ForMember(dest => dest.User1Id, opt => opt.MapFrom(src => src.User1Id))
+            .ForMember(dest => dest.User1Name, opt => opt.MapFrom(src => src.User1 != null ? src.User1.UserName : string.Empty))
+            .ForMember(dest => dest.User2Id, opt => opt.MapFrom(src => src.User2Id))
+            .ForMember(dest => dest.User2Name, opt => opt.MapFrom(src => src.User2 != null ? src.User2.UserName : string.Empty))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date));
+    }
+} 
+=======
     }
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e

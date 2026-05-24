@@ -1,10 +1,48 @@
+using Microsoft.EntityFrameworkCore;
+using UniParche.DataAccess.DbContext;
+using UniParche.DataAccess.Repositories;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.Domain.Interfaces.Services;
+using UniParche.Domain.Services;
+using UniParche.Domain.Helpers;
+using UniParche.API.Mappers;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// Add services to the container
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+// Add OpenAPI
 builder.Services.AddOpenApi();
+
+// Add DbContext
+builder.Services.AddDbContext<UniParcheDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Add Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+// Add Services
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IUniversityService, UniversityService>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<ILikeService, LikeService>();
+
+// Add Helpers
+builder.Services.AddScoped<UserValidationHelper>();
+builder.Services.AddScoped<PostValidationHelper>();
+
+// Add Logging
+builder.Services.AddLogging();
 
 var app = builder.Build();
 

@@ -13,7 +13,7 @@ public class UpdateUserRequest
     /// <summary>
     /// Nueva carrera/programa
     /// </summary>
-    public string? CarrerName { get; set; }
+    public string? CareerName { get; set; }
 
     /// <summary>
     /// Nuevo semestre

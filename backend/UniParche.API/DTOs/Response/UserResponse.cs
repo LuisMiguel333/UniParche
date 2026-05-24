@@ -23,7 +23,7 @@ public class UserResponse
     /// <summary>
     /// Carrera/programa del usuario
     /// </summary>
-    public string CarrerName { get; set; } = string.Empty;
+    public string CareerName { get; set; } = string.Empty;
 
     /// <summary>
     /// Semestre actual del usuario

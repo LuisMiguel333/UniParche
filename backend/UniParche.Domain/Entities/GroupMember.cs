@@ -12,6 +12,6 @@ namespace UniParche.Domain.Entities
 		// Navigation properties
 
 		public Group Group { get; set; }
-		public Usuario User { get; set; }
+		public User User { get; set; }
 	}
 }

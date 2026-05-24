@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UniParche.DataAccess.DbContext;
 
@@ -11,9 +12,11 @@ using UniParche.DataAccess.DbContext;
 namespace UniParche.DataAccess.Migrations
 {
     [DbContext(typeof(UniParcheDbContext))]
-    partial class UniParcheDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260524013040_AddReactionTypeToLike")]
+    partial class AddReactionTypeToLike
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -11,6 +11,6 @@ namespace UniParche.Domain.Entities
         public AttendanceStatus Status { get; set; } = AttendanceStatus.Pending;
         // Navigation properties
         public Event Event { get; set; }
-        public Usuario User { get; set; }
+        public User User { get; set; }
     }
 }

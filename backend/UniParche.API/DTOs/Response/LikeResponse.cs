@@ -1,5 +1,7 @@
 namespace UniParche.API.DTOs.Response;
 
+using UniParche.Domain.Enums;
+
 /// <summary>
 /// DTO de respuesta para información de un like
 /// </summary>
@@ -24,4 +26,9 @@ public class LikeResponse
     /// ID del post que recibió el like
     /// </summary>
     public int PostId { get; set; }
+
+    /// <summary>
+    /// Tipo de reacción (Like, Love, Sad, Angry, Wow, Haha, Care)
+    /// </summary>
+    public ReactionType ReactionType { get; set; } = ReactionType.Like;
 }

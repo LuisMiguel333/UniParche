@@ -12,8 +12,8 @@ namespace UniParche.Domain.Entities
         public int CreatorId { get; set; }
         public GroupType Type { get; set; } = GroupType.Study;
         // Navigation properties
-        public Universidad University { get; set; }
-        public Usuario Creator { get; set; }
+        public University University { get; set; }
+        public User Creator { get; set; }
         public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
     }
 }

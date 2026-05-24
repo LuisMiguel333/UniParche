@@ -132,6 +132,7 @@ public class MappingProfile : Profile
         // Like Mappings
         CreateMap<CreateLikeRequest, Like>()
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
+            .ForMember(dest => dest.ReactionType, opt => opt.MapFrom(src => src.ReactionType))
             .ForMember(dest => dest.Id, opt => opt.Ignore())
             .ForMember(dest => dest.UserId, opt => opt.Ignore())
             .ForMember(dest => dest.User, opt => opt.Ignore())
@@ -140,6 +141,7 @@ public class MappingProfile : Profile
         CreateMap<Like, LikeResponse>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.user_name : string.Empty))
-            .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId));
+            .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
+            .ForMember(dest => dest.ReactionType, opt => opt.MapFrom(src => src.ReactionType));
     }
 }

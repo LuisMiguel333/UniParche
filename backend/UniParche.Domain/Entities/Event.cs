@@ -1,7 +1,7 @@
 using UniParche.Domain.Enums;
 
 namespace UniParche.Domain.Entities
-
+{
     public class Event
     {
         public int Id { get; set; }
@@ -15,15 +15,10 @@ namespace UniParche.Domain.Entities
         public EventStatus Status { get; set; } = EventStatus.Upcoming;
         public GroupType Type { get; set; }
         public int UniversityId { get; set; }
-        public Usuario Creator { get; set; }
-
+        public User Creator { get; set; }
 
         // navigation properties
-
-        public Universidad University { get; set; }
+        public University University { get; set; }
         public ICollection<EventAttendee> EventAttendees { get; set; } = new List<EventAttendee>();
-
     }
-
-
-       
+}

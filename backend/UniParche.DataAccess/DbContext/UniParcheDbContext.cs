@@ -62,6 +62,11 @@ public class UniParcheDbContext : Microsoft.EntityFrameworkCore.DbContext
             .HasForeignKey(l => l.PostId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // ═══ Configuración de propiedades de Like ═══
+        modelBuilder.Entity<Like>()
+            .Property(l => l.ReactionType)
+            .HasConversion<int>();
+
         // ═══ Índices para optimización ═══
         modelBuilder.Entity<Post>()
             .HasIndex(p => p.UserId)

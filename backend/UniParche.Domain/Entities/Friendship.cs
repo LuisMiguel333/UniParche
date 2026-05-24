@@ -11,6 +11,6 @@ public class Friendship
 	public DateTime Date { get; set; } = DateTime.UtcNow;
 
 	// Navigation properties
-	public Usuario User1 { get; set; } = null!;
-	public Usuario User2 { get; set; } = null!;
+	public User User1 { get; set; } = null!;
+	public User User2 { get; set; } = null!;
 }

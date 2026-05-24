@@ -143,6 +143,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
             .ForMember(dest => dest.ReactionType, opt => opt.MapFrom(src => src.ReactionType));
+<<<<<<< HEAD
 
 
         // Event Mappings
@@ -266,3 +267,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date));
     }
 } 
+=======
+    }
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e

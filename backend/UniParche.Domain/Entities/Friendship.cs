@@ -3,6 +3,7 @@ using UniParche.Domain.Enums;
 namespace UniParche.Domain.Entities;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 public class Friendship
 {
     public int Id { get; set; }
@@ -16,6 +17,8 @@ public class Friendship
     public User User2 { get; set; } = null!;
 }
 =======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 public class Friendship : AuditBase
 {
 	public int User1Id { get; set; }
@@ -26,5 +29,9 @@ public class Friendship : AuditBase
 	// Navigation properties
 	public User User1 { get; set; } = null!;
 	public User User2 { get; set; } = null!;
+<<<<<<< HEAD
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
 }
 >>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e

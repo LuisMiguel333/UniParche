@@ -1,6 +1,7 @@
 using UniParche.Domain.Enums;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 namespace Uniparche.Domain.Entities
 {
     public class Group
@@ -19,6 +20,8 @@ namespace Uniparche.Domain.Entities
     }
 }
 =======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 namespace UniParche.Domain.Entities;
 
 public class Group : AuditBase
@@ -34,5 +37,9 @@ public class Group : AuditBase
     public University University { get; set; } = null!;
     public User Creator { get; set; } = null!;
     public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
+<<<<<<< HEAD
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
 }
 >>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e

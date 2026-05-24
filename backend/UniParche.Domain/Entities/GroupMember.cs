@@ -1,6 +1,7 @@
 using UniParche.Domain.Enums;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 namespace UniParche.Domain.Entities
 {
     public class GroupMember
@@ -17,6 +18,8 @@ namespace UniParche.Domain.Entities
     }
 }
 =======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 namespace UniParche.Domain.Entities;
 
 public class GroupMember : AuditBase
@@ -29,5 +32,9 @@ public class GroupMember : AuditBase
 	// Navigation properties
 	public Group Group { get; set; } = null!;
 	public User User { get; set; } = null!;
+<<<<<<< HEAD
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
 }
 >>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e

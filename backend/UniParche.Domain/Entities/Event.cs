@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 using Uniparches.Domain.Enums;
 
 namespace UniParche.Domain.Entities;
@@ -24,6 +25,8 @@ public class Event
     public ICollection<EventAttendee> EventAttendees { get; set; } = new List<EventAttendee>();
 }
 =======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 using UniParche.Domain.Enums;
 
 namespace UniParche.Domain.Entities;
@@ -45,5 +48,9 @@ public class Event : AuditBase
     public User Creator { get; set; } = null!;
     public University University { get; set; } = null!;
     public ICollection<EventAttendee> EventAttendees { get; set; } = new List<EventAttendee>();
+<<<<<<< HEAD
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
 }
 >>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e

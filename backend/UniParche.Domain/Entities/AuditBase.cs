@@ -1,7 +1,6 @@
-﻿namespace UniParche.Domain.Entities
+﻿namespace UniParche.Domain.Entities;
+
+public class AuditBase
 {
-    public class AuditBase
-    {
-        public int Id { get; set; }
-    }
+    public int Id { get; set; }
 }

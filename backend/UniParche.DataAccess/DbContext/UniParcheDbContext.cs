@@ -90,12 +90,12 @@ public class UniParcheDbContext : Microsoft.EntityFrameworkCore.DbContext
             .IsUnique();
 
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.email)
+            .HasIndex(u => u.Email)
             .HasDatabaseName("IX_User_Email")
             .IsUnique();
 
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.user_name)
+            .HasIndex(u => u.UserName)
             .HasDatabaseName("IX_User_UserName")
             .IsUnique();
 

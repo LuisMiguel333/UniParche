@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace UniParche.Domain.Entities;
 
-namespace UniParche.Domain.Entities;
-
-public class User: AuditBase
+public class User : AuditBase
 {
-    public string user_name { get; set; } = string.Empty;
-    public string email { get; set; } = string.Empty;
-    public string password_hash { get; set; } = string.Empty;
-    public string profile_picture_url { get; set; } = string.Empty;
-    public string Carrer_name { get; set; } = string.Empty;
-    public int semester { get; set; }
-    public DateTime register_time { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string PasswordHash { get; set; } = string.Empty;
+    public string ProfilePictureUrl { get; set; } = string.Empty;
+    public string CareerName { get; set; } = string.Empty;
+    public int Semester { get; set; }
+    public DateTime RegisterTime { get; set; }
 
     // Foreign key
     public int UniversityId { get; set; }
 
-    // navigation properties
+    // Navigation properties
     public University University { get; set; } = null!;
-
 }

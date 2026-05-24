@@ -142,13 +142,13 @@ public class UserService : IUserService
             throw new ArgumentNullException(nameof(user));
 
         // Validaciones
-        await _validationHelper.ValidateEmailAsync(user.email);
-        await _validationHelper.ValidateUserNameAsync(user.user_name);
+        await _validationHelper.ValidateEmailAsync(user.Email);
+        await _validationHelper.ValidateUserNameAsync(user.UserName);
         await _validationHelper.ValidateUniversityExistsAsync(user.UniversityId);
 
-        user.register_time = DateTime.UtcNow;
+        user.RegisterTime = DateTime.UtcNow;
 
-        _logger.LogInformation("Creando nuevo usuario: {Email}", user.email);
+        _logger.LogInformation("Creando nuevo usuario: {Email}", user.Email);
         return await _userRepository.AddAsync(user);
     }
 
@@ -163,8 +163,8 @@ public class UserService : IUserService
         var existingUser = await _validationHelper.ValidateUserExistsAsync(user.Id);
 
         // Validar email si cambió
-        if (user.email != existingUser.email)
-            await _validationHelper.ValidateEmailAsync(user.email, user.Id);
+        if (user.Email != existingUser.Email)
+            await _validationHelper.ValidateEmailAsync(user.Email, user.Id);
 
         _logger.LogInformation("Actualizando usuario: {UserId}", user.Id);
         return await _userRepository.UpdateAsync(user);
@@ -177,7 +177,7 @@ public class UserService : IUserService
         if (string.IsNullOrWhiteSpace(profilePictureUrl))
             throw new ArgumentException("La URL de la foto de perfil es requerida", nameof(profilePictureUrl));
 
-        user.profile_picture_url = profilePictureUrl;
+        user.ProfilePictureUrl = profilePictureUrl;
 
         _logger.LogInformation("Actualizando foto de perfil del usuario: {UserId}", userId);
         await _userRepository.UpdateAsync(user);
@@ -191,7 +191,7 @@ public class UserService : IUserService
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new ArgumentException("El hash de contraseña es requerido", nameof(passwordHash));
 
-        user.password_hash = passwordHash;
+        user.PasswordHash = passwordHash;
 
         _logger.LogInformation("Actualizando contraseña del usuario: {UserId}", userId);
         await _userRepository.UpdateAsync(user);

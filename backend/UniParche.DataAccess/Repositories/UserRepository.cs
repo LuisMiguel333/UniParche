@@ -16,7 +16,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<User?> GetByUserNameAsync(string userName)
     {
         return await _dbSet
-            .FirstOrDefaultAsync(u => u.user_name == userName);
+            .FirstOrDefaultAsync(u => u.UserName == userName);
     }
 
     // ═══ Búsqueda por Email ═══
@@ -24,7 +24,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<User?> GetByEmailAsync(string email)
     {
         return await _dbSet
-            .FirstOrDefaultAsync(u => u.email == email);
+            .FirstOrDefaultAsync(u => u.Email == email);
     }
 
     // ═══ Usuario con Detalles ═══
@@ -42,7 +42,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _dbSet
             .Where(u => u.UniversityId == universityId)
-            .OrderBy(u => u.user_name)
+            .OrderBy(u => u.UserName)
             .ToListAsync();
     }
 
@@ -51,7 +51,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _dbSet
             .Where(u => u.UniversityId == universityId)
-            .OrderBy(u => u.user_name)
+            .OrderBy(u => u.UserName)
             .Skip(skip)
             .Take(take)
             .ToListAsync();
@@ -62,8 +62,8 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<IEnumerable<User>> GetUsersByCarrerAsync(int universityId, string carrer)
     {
         return await _dbSet
-            .Where(u => u.UniversityId == universityId && u.Carrer_name == carrer)
-            .OrderBy(u => u.user_name)
+            .Where(u => u.UniversityId == universityId && u.CareerName == carrer)
+            .OrderBy(u => u.UserName)
             .ToListAsync();
     }
 
@@ -72,8 +72,8 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<IEnumerable<User>> GetUsersBySemesterAsync(int universityId, int semester)
     {
         return await _dbSet
-            .Where(u => u.UniversityId == universityId && u.semester == semester)
-            .OrderBy(u => u.user_name)
+            .Where(u => u.UniversityId == universityId && u.Semester == semester)
+            .OrderBy(u => u.UserName)
             .ToListAsync();
     }
 
@@ -82,10 +82,10 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     public async Task<IEnumerable<User>> SearchUsersAsync(string query)
     {
         return await _dbSet
-            .Where(u => u.user_name.Contains(query) 
-                     || u.email.Contains(query)
-                     || u.Carrer_name.Contains(query))
-            .OrderBy(u => u.user_name)
+            .Where(u => u.UserName.Contains(query) 
+                     || u.Email.Contains(query)
+                     || u.CareerName.Contains(query))
+            .OrderBy(u => u.UserName)
             .ToListAsync();
     }
 
@@ -94,10 +94,10 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _dbSet
             .Where(u => u.UniversityId == universityId
-                     && (u.user_name.Contains(query)
-                         || u.email.Contains(query)
-                         || u.Carrer_name.Contains(query)))
-            .OrderBy(u => u.user_name)
+                     && (u.UserName.Contains(query)
+                         || u.Email.Contains(query)
+                         || u.CareerName.Contains(query)))
+            .OrderBy(u => u.UserName)
             .ToListAsync();
     }
 
@@ -105,12 +105,12 @@ public class UserRepository : GenericRepository<User>, IUserRepository
 
     public async Task<bool> UserNameExistsAsync(string userName)
     {
-        return await _dbSet.AnyAsync(u => u.user_name == userName);
+        return await _dbSet.AnyAsync(u => u.UserName == userName);
     }
 
     public async Task<bool> EmailExistsAsync(string email)
     {
-        return await _dbSet.AnyAsync(u => u.email == email);
+        return await _dbSet.AnyAsync(u => u.Email == email);
     }
 
     // ═══ Usuarios Activos ═══
@@ -120,7 +120,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         // Ordenado por fecha de registro (más recientes primero)
         return await _dbSet
             .Where(u => u.UniversityId == universityId)
-            .OrderByDescending(u => u.register_time)
+            .OrderByDescending(u => u.RegisterTime)
             .Take(take)
             .ToListAsync();
     }
@@ -129,7 +129,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _dbSet
             .Where(u => u.UniversityId == universityId)
-            .OrderByDescending(u => u.register_time)
+            .OrderByDescending(u => u.RegisterTime)
             .Take(take)
             .ToListAsync();
     }
@@ -143,7 +143,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
 
     public async Task<int> CountUsersByCarrerAsync(int universityId, string carrer)
     {
-        return await _dbSet.CountAsync(u => u.UniversityId == universityId && u.Carrer_name == carrer);
+        return await _dbSet.CountAsync(u => u.UniversityId == universityId && u.CareerName == carrer);
     }
 
     // ═══ Sugerencias ═══
@@ -157,8 +157,8 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         return await _dbSet
             .Where(u => u.UniversityId == user.UniversityId
                      && u.Id != userId
-                     && u.Carrer_name == user.Carrer_name)
-            .OrderBy(u => u.user_name)
+                     && u.CareerName == user.CareerName)
+            .OrderBy(u => u.UserName)
             .Take(take)
             .ToListAsync();
     }
@@ -182,12 +182,12 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         return new UserStatistics
         {
             UserId = userId,
-            UserName = user.user_name,
+            UserName = user.UserName,
             TotalPosts = postCount,
             TotalComments = commentCount,
             TotalLikesGiven = likeCount,
             TotalLikesReceived = receivedLikesCount,
-            RegisterDate = user.register_time
+            RegisterDate = user.RegisterTime
         };
     }
 }

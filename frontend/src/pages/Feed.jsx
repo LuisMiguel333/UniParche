@@ -1,61 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { obtenerPublicaciones, crearPublicacion, obtenerComentarios, crearComentario, darLike } from '../services/publicaciones'
 
 const MAX_CARACTERES = 280
 
 const imagenesDemo = [
   'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&q=80',
   'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80',
-  'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=600&q=80',
 ]
 
-const publicacionesIniciales = [
-  {
-    id: 1,
-    autor: 'Valentina Ríos',
-    universidad: 'ITM',
-    carrera: 'Ingeniería de Sistemas',
-    contenido: 'Alguien más tiene el parcial de cálculo mañana? 😭',
-    fecha: 'Hace 10 minutos',
-    likes: 24,
-    imagen: null,
-    comentarios: [
-      { id: 1, autor: 'Sebastián Mora', texto: 'Yo también! Qué parcial tan difícil.', fecha: 'Hace 5 minutos' },
-    ],
-  },
-  {
-    id: 2,
-    autor: 'Sebastián Mora',
-    universidad: 'UdeA',
-    carrera: 'Medicina',
-    contenido: 'Terminé el semestre con todas las materias. No lo puedo creer.',
-    fecha: 'Hace 1 hora',
-    likes: 87,
-    imagen: imagenesDemo[0],
-    comentarios: [],
-  },
-  {
-    id: 3,
-    autor: 'Daniela Castro',
-    universidad: 'EAFIT',
-    carrera: 'Administración',
-    contenido: 'Buscando grupo para el proyecto de finanzas. Somos 2, necesitamos 1 más.',
-    fecha: 'Hace 3 horas',
-    likes: 5,
-    imagen: imagenesDemo[1],
-    comentarios: [
-      { id: 1, autor: 'Luis M.', texto: 'Yo me uno! Mándame mensaje.', fecha: 'Hace 2 horas' },
-      { id: 2, autor: 'Valentina Ríos', texto: 'También estoy interesada.', fecha: 'Hace 1 hora' },
-    ],
-  },
-]
-
-function SeccionComentarios({ comentarios, onAgregarComentario }) {
+function SeccionComentarios({ postId, comentariosIniciales, onAgregarComentario }) {
+  const [comentarios, setComentarios] = useState(comentariosIniciales)
   const [texto, setTexto] = useState('')
   const [mostrar, setMostrar] = useState(false)
 
-  const handleAgregar = () => {
+  const handleAgregar = async () => {
     if (!texto.trim()) return
-    onAgregarComentario(texto.trim())
+    const nuevo = await crearComentario(postId, texto.trim())
+    setComentarios([...comentarios, nuevo])
+    onAgregarComentario(postId)
     setTexto('')
   }
 
@@ -76,12 +38,12 @@ function SeccionComentarios({ comentarios, onAgregarComentario }) {
           {comentarios.map(comentario => (
             <div key={comentario.id} className="flex gap-2">
               <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {comentario.autor[0]}
+                {comentario.userName[0]}
               </div>
               <div className="bg-gray-800 rounded-xl px-3 py-2 flex flex-col gap-0.5 flex-1">
-                <p className="text-white text-xs font-semibold">{comentario.autor}</p>
-                <p className="text-gray-300 text-xs">{comentario.texto}</p>
-                <p className="text-gray-600 text-xs">{comentario.fecha}</p>
+                <p className="text-white text-xs font-semibold">{comentario.userName}</p>
+                <p className="text-gray-300 text-xs">{comentario.content}</p>
+                <p className="text-gray-600 text-xs">{typeof comentario.createdAt === 'string' ? comentario.createdAt : new Date(comentario.createdAt).toLocaleDateString('es-CO')}</p>
               </div>
             </div>
           ))}
@@ -106,35 +68,43 @@ function SeccionComentarios({ comentarios, onAgregarComentario }) {
   )
 }
 
-function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario }) {
-  const [liked, setLiked] = useState(false)
+function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario, comentariosIniciales }) {
+  const [liked, setLiked] = useState(publicacion.isLikedByCurrentUser)
+  const [likes, setLikes] = useState(publicacion.likeCount)
 
-  const handleLike = () => {
+  const handleLike = async () => {
     setLiked(!liked)
+    setLikes(liked ? likes - 1 : likes + 1)
+    await darLike(publicacion.id)
     onLike(publicacion.id)
   }
+
+  const fechaFormateada = typeof publicacion.createdAt === 'string'
+    ? publicacion.createdAt
+    : new Date(publicacion.createdAt).toLocaleDateString('es-CO')
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors">
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-            {publicacion.autor[0]}
+            {publicacion.userName[0]}
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">{publicacion.autor}</p>
-            <p className="text-gray-500 text-xs">{publicacion.universidad} · {publicacion.carrera}</p>
+            <p className="text-white font-semibold text-sm">{publicacion.userName}</p>
+            <p className="text-gray-500 text-xs">{publicacion.universityName} · {publicacion.careerName}</p>
           </div>
-          <span className="ml-auto text-gray-600 text-xs">{publicacion.fecha}</span>
+          <span className="ml-auto text-gray-600 text-xs">{fechaFormateada}</span>
         </div>
-        <p className="text-gray-300 text-sm">{publicacion.contenido}</p>
+        <p className="text-gray-300 text-sm">{publicacion.content}</p>
       </div>
 
-      {publicacion.imagen && (
+      {publicacion.imageUrl && (
         <img
-          src={publicacion.imagen}
+          src={publicacion.imageUrl}
           alt="Imagen de la publicación"
           className="w-full max-h-72 object-cover"
+          onError={(e) => e.target.style.display = 'none'}
         />
       )}
 
@@ -145,14 +115,15 @@ function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario }) {
             liked ? 'text-purple-400' : 'text-gray-500 hover:text-purple-400'
           }`}
         >
-          {liked ? '♥' : '♡'} {publicacion.likes} likes
+          {liked ? '♥' : '♡'} {likes} likes
         </button>
       </div>
 
       <div className="px-5 pb-4">
         <SeccionComentarios
-          comentarios={publicacion.comentarios}
-          onAgregarComentario={(texto) => onAgregarComentario(publicacion.id, texto)}
+          postId={publicacion.id}
+          comentariosIniciales={comentariosIniciales}
+          onAgregarComentario={onAgregarComentario}
         />
       </div>
     </div>
@@ -164,7 +135,7 @@ function FormularioPublicacion({ onPublicar }) {
   const [conImagen, setConImagen] = useState(false)
   const [error, setError] = useState('')
 
-  const handlePublicar = () => {
+  const handlePublicar = async () => {
     if (!contenido.trim()) {
       setError('Escribe algo antes de publicar')
       return
@@ -173,7 +144,7 @@ function FormularioPublicacion({ onPublicar }) {
       setError('La publicación debe tener al menos 5 caracteres')
       return
     }
-    onPublicar(contenido.trim(), conImagen)
+    await onPublicar(contenido.trim(), conImagen)
     setContenido('')
     setConImagen(false)
     setError('')
@@ -202,8 +173,7 @@ function FormularioPublicacion({ onPublicar }) {
           className="flex-1 bg-gray-800 text-white text-sm rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-purple-500 resize-none transition-colors"
         />
       </div>
-
-      <div className="flex items-center gap-3 ml-13">
+      <div className="flex items-center gap-3">
         <button
           onClick={() => setConImagen(!conImagen)}
           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
@@ -218,7 +188,6 @@ function FormularioPublicacion({ onPublicar }) {
           <p className="text-gray-600 text-xs">Se agregará una foto de ejemplo</p>
         )}
       </div>
-
       {error && <p className="text-red-400 text-xs">{error}</p>}
       <div className="flex items-center justify-between">
         <span className={`text-xs ${lleno ? 'text-red-400' : casiLleno ? 'text-amber-400' : 'text-gray-600'}`}>
@@ -239,53 +208,61 @@ function FormularioPublicacion({ onPublicar }) {
 }
 
 function Feed() {
-  const [publicaciones, setPublicaciones] = useState(publicacionesIniciales)
+  const [publicaciones, setPublicaciones] = useState([])
+  const [comentariosPorPost, setComentariosPorPost] = useState({})
+  const [cargando, setCargando] = useState(true)
 
-  const darLike = (id) => {
-    setPublicaciones(publicaciones.map(p =>
-      p.id === id ? { ...p, likes: p.likes + 1 } : p
-    ))
-  }
+  useEffect(() => {
+    const cargarDatos = async () => {
+      const posts = await obtenerPublicaciones()
+      setPublicaciones(posts)
 
-  const agregarComentario = (idPublicacion, texto) => {
-    setPublicaciones(publicaciones.map(p =>
-      p.id === idPublicacion
-        ? {
-            ...p,
-            comentarios: [
-              ...p.comentarios,
-              { id: p.comentarios.length + 1, autor: 'Tú', texto, fecha: 'Ahora' },
-            ],
-          }
-        : p
-    ))
-  }
-
-  const crearPublicacion = (contenido, conImagen) => {
-    const nueva = {
-      id: publicaciones.length + 1,
-      autor: 'Felipe Garces',
-      universidad: 'ITM',
-      carrera: 'Programación Web',
-      contenido,
-      fecha: 'Ahora',
-      likes: 0,
-      imagen: conImagen ? imagenesDemo[2] : null,
-      comentarios: [],
+      const comentariosMap = {}
+      for (const post of posts) {
+        comentariosMap[post.id] = await obtenerComentarios(post.id)
+      }
+      setComentariosPorPost(comentariosMap)
+      setCargando(false)
     }
-    setPublicaciones([nueva, ...publicaciones])
+    cargarDatos()
+  }, [])
+
+  const handleLike = (id) => {
+    setPublicaciones(publicaciones.map(p =>
+      p.id === id ? { ...p, likeCount: p.likeCount + 1 } : p
+    ))
   }
+
+  const handleAgregarComentario = (postId) => {
+    setPublicaciones(publicaciones.map(p =>
+      p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
+    ))
+  }
+
+  const handleCrearPublicacion = async (contenido, conImagen) => {
+    const imagen = conImagen ? imagenesDemo[Math.floor(Math.random() * imagenesDemo.length)] : null
+    const nueva = await crearPublicacion(contenido, imagen)
+    setPublicaciones([nueva, ...publicaciones])
+    setComentariosPorPost({ [nueva.id]: [], ...comentariosPorPost })
+  }
+
+  if (cargando) return (
+    <div className="flex items-center justify-center py-20">
+      <p className="text-gray-500 text-sm">Cargando publicaciones...</p>
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-white">Feed</h1>
-      <FormularioPublicacion onPublicar={crearPublicacion} />
+      <FormularioPublicacion onPublicar={handleCrearPublicacion} />
       {publicaciones.map(publicacion => (
         <TarjetaPublicacion
           key={publicacion.id}
           publicacion={publicacion}
-          onLike={darLike}
-          onAgregarComentario={agregarComentario}
+          onLike={handleLike}
+          onAgregarComentario={handleAgregarComentario}
+          comentariosIniciales={comentariosPorPost[publicacion.id] || []}
         />
       ))}
     </div>

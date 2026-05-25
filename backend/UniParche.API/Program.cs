@@ -22,20 +22,30 @@ builder.Services.AddDbContext<UniParcheDbContext>(options =>
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Add Repositories
+// ========== Add Repositories ==========
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IEventAttendeeRepository, EventAttendeeRepository>();
+builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<IGroupMemberRepository, GroupMemberRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// Add Services
+// ========== Add Services ==========
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IEventAttendeeService, EventAttendeeService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IGroupMemberService, GroupMemberService>();
 
 // Add Helpers
 builder.Services.AddScoped<UserValidationHelper>();

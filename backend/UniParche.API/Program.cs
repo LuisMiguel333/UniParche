@@ -62,6 +62,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UniParcheDbContext>();
+    await UniParche.DataAccess.Seeders.DataSeeder.SeedAsync(db);
+}
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

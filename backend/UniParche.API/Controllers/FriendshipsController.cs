@@ -54,7 +54,7 @@ public class FriendshipsController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<FriendshipResponse>("Datos inválidos"));
 
-            var friendship = await _friendshipService.SendRequestAsync(request);
+            var friendship = await _friendshipService.SendRequestAsync(request.User1Id, request.User2Id);
             var response = _mapper.Map<FriendshipResponse>(friendship);
             return Ok(new ApiResponse<FriendshipResponse>(response, "Solicitud de amistad enviada exitosamente"));
         }
@@ -77,7 +77,7 @@ public class FriendshipsController : ControllerBase
     {
         try
         {
-            await _friendshipService.UpdateStatusAsync(id, request);
+            await _friendshipService.UpdateStatusAsync(id, request.Status);
             return Ok(new ApiResponse<string>("Estado de amistad actualizado exitosamente"));
         }
         catch (KeyNotFoundException ex)

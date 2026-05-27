@@ -8,13 +8,13 @@ namespace UniParche.Domain.Interfaces.Services;
 public interface IEventService
 {
 	// ═══ Consultas ═══
-	Task<IEnumerable<Event>> GetAllEventsAsync();
-	Task<Event?> GetEventByIdAsync(int eventId);
-	Task<IEnumerable<Event>> GetEventsByUniversityAsync(int universityId);
-	Task<IEnumerable<Event>> GetEventsByCreatorAsync(int creatorId);
+	Task<IEnumerable<Event>> GetAllAsync();
+	Task<Event?> GetByIdAsync(int eventId);
+	Task<IEnumerable<Event>> GetByUniversityAsync(int universityId);
+	Task<IEnumerable<Event>> GetByCreatorAsync(int creatorId);
 
 	// ═══ Crear, Actualizar, Eliminar ═══
-	Task<Event> CreateEventAsync(Event entity, int creatorId);
-	Task<Event> UpdateEventAsync(Event entity);
-	Task<bool> DeleteEventAsync(int eventId);
+	Task<Event> CreateAsync(Event entity);
+	Task<Event> UpdateAsync(int id, Event entity);
+	Task<bool> DeleteAsync(int eventId);
 }

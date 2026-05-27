@@ -24,7 +24,7 @@ public class FriendshipService : IFriendshipService
 
     // ═══ Consultas ═══
 
-    public async Task<IEnumerable<Friendship>> GetFriendsByUserAsync(int userId)
+    public async Task<IEnumerable<Friendship>> GetByUserAsync(int userId)
     {
         if (userId <= 0) return Enumerable.Empty<Friendship>();
 
@@ -77,24 +77,24 @@ public class FriendshipService : IFriendshipService
         return await _friendshipRepository.AddAsync(friendship);
     }
 
-    public async Task<Friendship> UpdateStatusAsync(int user1Id, int user2Id, FriendshipStatus status)
+    public async Task<Friendship> UpdateStatusAsync(int friendshipId, FriendshipStatus status)
     {
-        var friendship = await GetFriendshipAsync(user1Id, user2Id)
+        var friendship = await _friendshipRepository.GetByIdAsync(friendshipId)
             ?? throw new KeyNotFoundException("No se encontró la solicitud de amistad.");
 
         friendship.Status = status;
         friendship.UpdatedAt = DateTime.UtcNow;
 
-        _logger.LogInformation("Amistad entre {User1Id} y {User2Id} actualizada a {Status}", user1Id, user2Id, status);
+        _logger.LogInformation("Amistad {FriendshipId} actualizada a {Status}", friendshipId, status);
         return await _friendshipRepository.UpdateAsync(friendship);
     }
 
-    public async Task<bool> DeleteFriendshipAsync(int user1Id, int user2Id)
+    public async Task<bool> DeleteAsync(int friendshipId)
     {
-        var friendship = await GetFriendshipAsync(user1Id, user2Id)
+        var friendship = await _friendshipRepository.GetByIdAsync(friendshipId)
             ?? throw new KeyNotFoundException("No se encontró la amistad.");
 
-        _logger.LogInformation("Eliminando amistad entre {User1Id} y {User2Id}", user1Id, user2Id);
-        return await _friendshipRepository.DeleteAsync(friendship);
+        _logger.LogInformation("Eliminando amistad: {FriendshipId}", friendshipId);
+        return await _friendshipRepository.DeleteAsync(friendshipId);
     }
 }

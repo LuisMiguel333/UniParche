@@ -24,13 +24,13 @@ public class EventService : IEventService
 
 	// ═══ Consultas ═══
 
-	public async Task<IEnumerable<Event>> GetAllEventsAsync()
+	public async Task<IEnumerable<Event>> GetAllAsync()
 	{
 		_logger.LogInformation("Obteniendo todos los parches");
 		return await _eventRepository.GetAllAsync();
 	}
 
-	public async Task<Event?> GetEventByIdAsync(int eventId)
+	public async Task<Event?> GetByIdAsync(int eventId)
 	{
 		if (eventId <= 0) return null;
 
@@ -38,7 +38,7 @@ public class EventService : IEventService
 		return await _eventRepository.GetByIdAsync(eventId);
 	}
 
-	public async Task<IEnumerable<Event>> GetEventsByUniversityAsync(int universityId)
+	public async Task<IEnumerable<Event>> GetByUniversityAsync(int universityId)
 	{
 		if (universityId <= 0) return Enumerable.Empty<Event>();
 
@@ -46,7 +46,7 @@ public class EventService : IEventService
 		return await _eventRepository.GetByExpressionAsync(e => e.UniversityId == universityId);
 	}
 
-	public async Task<IEnumerable<Event>> GetEventsByCreatorAsync(int creatorId)
+	public async Task<IEnumerable<Event>> GetByCreatorAsync(int creatorId)
 	{
 		if (creatorId <= 0) return Enumerable.Empty<Event>();
 
@@ -56,7 +56,7 @@ public class EventService : IEventService
 
 	// ═══ Crear, Actualizar, Eliminar ═══
 
-	public async Task<Event> CreateEventAsync(Event entity, int creatorId)
+	public async Task<Event> CreateAsync(Event entity)
 	{
 		if (entity == null)
 			throw new ArgumentNullException(nameof(entity));
@@ -67,7 +67,6 @@ public class EventService : IEventService
 		if (entity.Capacity <= 0)
 			throw new ArgumentException("Los cupos deben ser mayor a 0.");
 
-		entity.CreatorId = creatorId;
 		entity.Status = EventStatus.Upcoming;
 		entity.CreatedAt = DateTime.UtcNow;
 		entity.UpdatedAt = DateTime.UtcNow;
@@ -76,17 +75,17 @@ public class EventService : IEventService
 		return await _eventRepository.AddAsync(entity);
 	}
 
-	public async Task<Event> UpdateEventAsync(Event entity)
+	public async Task<Event> UpdateAsync(int id, Event entity)
 	{
 		if (entity == null)
 			throw new ArgumentNullException(nameof(entity));
-		if (entity.Id <= 0)
-			throw new ArgumentException("El parche debe tener un ID válido.");
+		if (id <= 0)
+			throw new ArgumentException("El ID debe ser válido.");
 		if (string.IsNullOrWhiteSpace(entity.Title))
 			throw new ArgumentException("El título del parche es obligatorio.");
 
-		var existing = await _eventRepository.GetByIdAsync(entity.Id)
-			?? throw new KeyNotFoundException($"No se encontró el parche con ID {entity.Id}.");
+		var existing = await _eventRepository.GetByIdAsync(id)
+			?? throw new KeyNotFoundException($"No se encontró el parche con ID {id}.");
 
 		existing.Title = entity.Title;
 		existing.Description = entity.Description;
@@ -97,11 +96,11 @@ public class EventService : IEventService
 		existing.Status = entity.Status;
 		existing.UpdatedAt = DateTime.UtcNow;
 
-		_logger.LogInformation("Actualizando parche: {EventId}", entity.Id);
+		_logger.LogInformation("Actualizando parche: {EventId}", id);
 		return await _eventRepository.UpdateAsync(existing);
 	}
 
-	public async Task<bool> DeleteEventAsync(int eventId)
+	public async Task<bool> DeleteAsync(int eventId)
 	{
 		var existing = await _eventRepository.GetByIdAsync(eventId)
 			?? throw new KeyNotFoundException($"No se encontró el parche con ID {eventId}.");

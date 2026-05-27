@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using UniParche.Domain.Interfaces.Services;
+using UniParche.Domain.Entities;
 using UniParche.API.DTOs.Request;
 using UniParche.API.DTOs.Response;
 
@@ -95,7 +96,8 @@ public class GroupsController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<GroupResponse>("Datos inválidos"));
 
-            var created = await _groupService.CreateAsync(request);
+            var entity = _mapper.Map<Group>(request);
+            var created = await _groupService.CreateAsync(entity);
             var response = _mapper.Map<GroupResponse>(created);
             return CreatedAtAction(nameof(GetById), new { id = created.Id },
                 new ApiResponse<GroupResponse>(response, "Grupo creado exitosamente"));
@@ -118,7 +120,8 @@ public class GroupsController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<GroupResponse>("Datos inválidos"));
 
-            var updated = await _groupService.UpdateAsync(id, request);
+            var entity = _mapper.Map<Group>(request);
+            var updated = await _groupService.UpdateAsync(id, entity);
             if (updated == null)
                 return NotFound(new ApiResponse<GroupResponse>("Grupo no encontrado"));
 

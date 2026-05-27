@@ -8,13 +8,13 @@ namespace UniParche.Domain.Interfaces.Services;
 public interface IGroupService
 {
     // ═══ Consultas ═══
-    Task<IEnumerable<Group>> GetAllGroupsAsync();
-    Task<Group?> GetGroupByIdAsync(int groupId);
-    Task<IEnumerable<Group>> GetGroupsByUniversityAsync(int universityId);
-    Task<IEnumerable<Group>> GetGroupsByCreatorAsync(int creatorId);
+    Task<IEnumerable<Group>> GetAllAsync();
+    Task<Group?> GetByIdAsync(int groupId);
+    Task<IEnumerable<Group>> GetByUniversityAsync(int universityId);
+    Task<IEnumerable<Group>> GetByCreatorAsync(int creatorId);
 
     // ═══ Crear, Actualizar, Eliminar ═══
-    Task<Group> CreateGroupAsync(Group entity, int creatorId);
-    Task<Group> UpdateGroupAsync(Group entity);
-    Task<bool> DeleteGroupAsync(int groupId);
+    Task<Group> CreateAsync(Group entity);
+    Task<Group> UpdateAsync(int id, Group entity);
+    Task<bool> DeleteAsync(int groupId);
 }

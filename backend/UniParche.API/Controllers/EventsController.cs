@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using UniParche.Domain.Interfaces.Services;
+using UniParche.Domain.Entities;
 using UniParche.API.DTOs.Request;
 using UniParche.API.DTOs.Response;
 
@@ -95,7 +96,8 @@ public class EventsController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<EventResponse>("Datos inválidos"));
 
-            var created = await _eventService.CreateAsync(request);
+            var entity = _mapper.Map<Event>(request);
+            var created = await _eventService.CreateAsync(entity);
             var response = _mapper.Map<EventResponse>(created);
             return CreatedAtAction(nameof(GetById), new { id = created.Id },
                 new ApiResponse<EventResponse>(response, "Parche creado exitosamente"));
@@ -118,7 +120,8 @@ public class EventsController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(new ApiResponse<EventResponse>("Datos inválidos"));
 
-            var updated = await _eventService.UpdateAsync(id, request);
+            var entity = _mapper.Map<Event>(request);
+            var updated = await _eventService.UpdateAsync(id, entity);
             if (updated == null)
                 return NotFound(new ApiResponse<EventResponse>("Parche no encontrado"));
 

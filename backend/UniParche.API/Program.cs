@@ -54,6 +54,15 @@ builder.Services.AddScoped<PostValidationHelper>();
 // Add Logging
 builder.Services.AddLogging();
 
+// Add CORS
+builder.Services.AddCors(options => {
+    options.AddPolicy("frontend", policy => {
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -62,11 +71,14 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// Seed data
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<UniParcheDbContext>();
     await UniParche.DataAccess.Seeders.DataSeeder.SeedAsync(db);
 }
+
+app.UseCors("frontend");
 
 app.UseHttpsRedirection();
 

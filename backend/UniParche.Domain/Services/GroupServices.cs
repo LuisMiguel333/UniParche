@@ -23,13 +23,13 @@ public class GroupService : IGroupService
 
     // ═══ Consultas ═══
 
-    public async Task<IEnumerable<Group>> GetAllGroupsAsync()
+    public async Task<IEnumerable<Group>> GetAllAsync()
     {
         _logger.LogInformation("Obteniendo todos los grupos");
         return await _groupRepository.GetAllAsync();
     }
 
-    public async Task<Group?> GetGroupByIdAsync(int groupId)
+    public async Task<Group?> GetByIdAsync(int groupId)
     {
         if (groupId <= 0) return null;
 
@@ -37,7 +37,7 @@ public class GroupService : IGroupService
         return await _groupRepository.GetByIdAsync(groupId);
     }
 
-    public async Task<IEnumerable<Group>> GetGroupsByUniversityAsync(int universityId)
+    public async Task<IEnumerable<Group>> GetByUniversityAsync(int universityId)
     {
         if (universityId <= 0) return Enumerable.Empty<Group>();
 
@@ -45,7 +45,7 @@ public class GroupService : IGroupService
         return await _groupRepository.GetByExpressionAsync(g => g.UniversityId == universityId);
     }
 
-    public async Task<IEnumerable<Group>> GetGroupsByCreatorAsync(int creatorId)
+    public async Task<IEnumerable<Group>> GetByCreatorAsync(int creatorId)
     {
         if (creatorId <= 0) return Enumerable.Empty<Group>();
 
@@ -55,7 +55,7 @@ public class GroupService : IGroupService
 
     // ═══ Crear, Actualizar, Eliminar ═══
 
-    public async Task<Group> CreateGroupAsync(Group entity, int creatorId)
+    public async Task<Group> CreateAsync(Group entity)
     {
         if (entity == null)
             throw new ArgumentNullException(nameof(entity));
@@ -64,7 +64,6 @@ public class GroupService : IGroupService
         if (string.IsNullOrWhiteSpace(entity.Subject))
             throw new ArgumentException("La materia del grupo es obligatoria.");
 
-        entity.CreatorId = creatorId;
         entity.CreatedAt = DateTime.UtcNow;
         entity.UpdatedAt = DateTime.UtcNow;
 
@@ -72,17 +71,17 @@ public class GroupService : IGroupService
         return await _groupRepository.AddAsync(entity);
     }
 
-    public async Task<Group> UpdateGroupAsync(Group entity)
+    public async Task<Group> UpdateAsync(int id, Group entity)
     {
         if (entity == null)
             throw new ArgumentNullException(nameof(entity));
-        if (entity.Id <= 0)
-            throw new ArgumentException("El grupo debe tener un ID válido.");
+        if (id <= 0)
+            throw new ArgumentException("El ID debe ser válido.");
         if (string.IsNullOrWhiteSpace(entity.Name))
             throw new ArgumentException("El nombre del grupo es obligatorio.");
 
-        var existing = await _groupRepository.GetByIdAsync(entity.Id)
-            ?? throw new KeyNotFoundException($"No se encontró el grupo con ID {entity.Id}.");
+        var existing = await _groupRepository.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException($"No se encontró el grupo con ID {id}.");
 
         existing.Name = entity.Name;
         existing.Description = entity.Description;
@@ -90,11 +89,11 @@ public class GroupService : IGroupService
         existing.Type = entity.Type;
         existing.UpdatedAt = DateTime.UtcNow;
 
-        _logger.LogInformation("Actualizando grupo: {GroupId}", entity.Id);
+        _logger.LogInformation("Actualizando grupo: {GroupId}", id);
         return await _groupRepository.UpdateAsync(existing);
     }
 
-    public async Task<bool> DeleteGroupAsync(int groupId)
+    public async Task<bool> DeleteAsync(int groupId)
     {
         var existing = await _groupRepository.GetByIdAsync(groupId)
             ?? throw new KeyNotFoundException($"No se encontró el grupo con ID {groupId}.");

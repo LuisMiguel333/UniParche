@@ -46,7 +46,7 @@ public class EventRepository : GenericRepository<Event>, IEventRepository
 	public async Task<Event?> GetWithAttendeesAsync(int id)
 	{
 		return await _dbSet
-			.Include(e => e.Attendees)
+			.Include(e => e.EventAttendees)
 			.FirstOrDefaultAsync(e => e.Id == id);
 	}
 }

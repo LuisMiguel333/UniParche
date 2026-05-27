@@ -7,17 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-<<<<<<< HEAD
-<<<<<<< HEAD
     <Folder Include="Interfaces\Services\" />
     <Folder Include="Interfaces\Repositories\" />
     <Folder Include="Services\" />
-=======
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
->>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
-=======
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
->>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
   </ItemGroup>
 
 </Project>

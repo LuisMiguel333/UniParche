@@ -4014,64 +4014,26 @@ export default Login
 --- FIN DEL ARCHIVO: ./frontend/src/pages/Login.jsx ---
 
 --- INICIO DEL ARCHIVO: ./frontend/src/pages/Feed.jsx ---
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { obtenerPublicaciones, crearPublicacion, obtenerComentarios, crearComentario, darLike } from '../services/publicaciones'
 
 const MAX_CARACTERES = 280
 
 const imagenesDemo = [
   'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&q=80',
   'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&q=80',
-  'https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=600&q=80',
 ]
 
-const publicacionesIniciales = [
-  {
-    id: 1,
-    autor: 'Valentina Ríos',
-    universidad: 'ITM',
-    carrera: 'Ingeniería de Sistemas',
-    contenido: 'Alguien más tiene el parcial de cálculo mañana? 😭',
-    fecha: 'Hace 10 minutos',
-    likes: 24,
-    imagen: null,
-    comentarios: [
-      { id: 1, autor: 'Sebastián Mora', texto: 'Yo también! Qué parcial tan difícil.', fecha: 'Hace 5 minutos' },
-    ],
-  },
-  {
-    id: 2,
-    autor: 'Sebastián Mora',
-    universidad: 'UdeA',
-    carrera: 'Medicina',
-    contenido: 'Terminé el semestre con todas las materias. No lo puedo creer.',
-    fecha: 'Hace 1 hora',
-    likes: 87,
-    imagen: imagenesDemo[0],
-    comentarios: [],
-  },
-  {
-    id: 3,
-    autor: 'Daniela Castro',
-    universidad: 'EAFIT',
-    carrera: 'Administración',
-    contenido: 'Buscando grupo para el proyecto de finanzas. Somos 2, necesitamos 1 más.',
-    fecha: 'Hace 3 horas',
-    likes: 5,
-    imagen: imagenesDemo[1],
-    comentarios: [
-      { id: 1, autor: 'Luis M.', texto: 'Yo me uno! Mándame mensaje.', fecha: 'Hace 2 horas' },
-      { id: 2, autor: 'Valentina Ríos', texto: 'También estoy interesada.', fecha: 'Hace 1 hora' },
-    ],
-  },
-]
-
-function SeccionComentarios({ comentarios, onAgregarComentario }) {
+function SeccionComentarios({ postId, comentariosIniciales, onAgregarComentario }) {
+  const [comentarios, setComentarios] = useState(comentariosIniciales)
   const [texto, setTexto] = useState('')
   const [mostrar, setMostrar] = useState(false)
 
-  const handleAgregar = () => {
+  const handleAgregar = async () => {
     if (!texto.trim()) return
-    onAgregarComentario(texto.trim())
+    const nuevo = await crearComentario(postId, texto.trim())
+    setComentarios([...comentarios, nuevo])
+    onAgregarComentario(postId)
     setTexto('')
   }
 
@@ -4092,12 +4054,12 @@ function SeccionComentarios({ comentarios, onAgregarComentario }) {
           {comentarios.map(comentario => (
             <div key={comentario.id} className="flex gap-2">
               <div className="w-7 h-7 rounded-full bg-gray-700 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                {comentario.autor[0]}
+                {comentario.userName[0]}
               </div>
               <div className="bg-gray-800 rounded-xl px-3 py-2 flex flex-col gap-0.5 flex-1">
-                <p className="text-white text-xs font-semibold">{comentario.autor}</p>
-                <p className="text-gray-300 text-xs">{comentario.texto}</p>
-                <p className="text-gray-600 text-xs">{comentario.fecha}</p>
+                <p className="text-white text-xs font-semibold">{comentario.userName}</p>
+                <p className="text-gray-300 text-xs">{comentario.content}</p>
+                <p className="text-gray-600 text-xs">{typeof comentario.createdAt === 'string' ? comentario.createdAt : new Date(comentario.createdAt).toLocaleDateString('es-CO')}</p>
               </div>
             </div>
           ))}
@@ -4122,35 +4084,43 @@ function SeccionComentarios({ comentarios, onAgregarComentario }) {
   )
 }
 
-function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario }) {
-  const [liked, setLiked] = useState(false)
+function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario, comentariosIniciales }) {
+  const [liked, setLiked] = useState(publicacion.isLikedByCurrentUser)
+  const [likes, setLikes] = useState(publicacion.likeCount)
 
-  const handleLike = () => {
+  const handleLike = async () => {
     setLiked(!liked)
+    setLikes(liked ? likes - 1 : likes + 1)
+    await darLike(publicacion.id)
     onLike(publicacion.id)
   }
+
+  const fechaFormateada = typeof publicacion.createdAt === 'string'
+    ? publicacion.createdAt
+    : new Date(publicacion.createdAt).toLocaleDateString('es-CO')
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors">
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-            {publicacion.autor[0]}
+            {publicacion.userName[0]}
           </div>
           <div>
-            <p className="text-white font-semibold text-sm">{publicacion.autor}</p>
-            <p className="text-gray-500 text-xs">{publicacion.universidad} · {publicacion.carrera}</p>
+            <p className="text-white font-semibold text-sm">{publicacion.userName}</p>
+            <p className="text-gray-500 text-xs">{publicacion.universityName} · {publicacion.careerName}</p>
           </div>
-          <span className="ml-auto text-gray-600 text-xs">{publicacion.fecha}</span>
+          <span className="ml-auto text-gray-600 text-xs">{fechaFormateada}</span>
         </div>
-        <p className="text-gray-300 text-sm">{publicacion.contenido}</p>
+        <p className="text-gray-300 text-sm">{publicacion.content}</p>
       </div>
 
-      {publicacion.imagen && (
+      {publicacion.imageUrl && (
         <img
-          src={publicacion.imagen}
+          src={publicacion.imageUrl}
           alt="Imagen de la publicación"
           className="w-full max-h-72 object-cover"
+          onError={(e) => e.target.style.display = 'none'}
         />
       )}
 
@@ -4161,14 +4131,15 @@ function TarjetaPublicacion({ publicacion, onLike, onAgregarComentario }) {
             liked ? 'text-purple-400' : 'text-gray-500 hover:text-purple-400'
           }`}
         >
-          {liked ? '♥' : '♡'} {publicacion.likes} likes
+          {liked ? '♥' : '♡'} {likes} likes
         </button>
       </div>
 
       <div className="px-5 pb-4">
         <SeccionComentarios
-          comentarios={publicacion.comentarios}
-          onAgregarComentario={(texto) => onAgregarComentario(publicacion.id, texto)}
+          postId={publicacion.id}
+          comentariosIniciales={comentariosIniciales}
+          onAgregarComentario={onAgregarComentario}
         />
       </div>
     </div>
@@ -4180,7 +4151,7 @@ function FormularioPublicacion({ onPublicar }) {
   const [conImagen, setConImagen] = useState(false)
   const [error, setError] = useState('')
 
-  const handlePublicar = () => {
+  const handlePublicar = async () => {
     if (!contenido.trim()) {
       setError('Escribe algo antes de publicar')
       return
@@ -4189,7 +4160,7 @@ function FormularioPublicacion({ onPublicar }) {
       setError('La publicación debe tener al menos 5 caracteres')
       return
     }
-    onPublicar(contenido.trim(), conImagen)
+    await onPublicar(contenido.trim(), conImagen)
     setContenido('')
     setConImagen(false)
     setError('')
@@ -4218,8 +4189,7 @@ function FormularioPublicacion({ onPublicar }) {
           className="flex-1 bg-gray-800 text-white text-sm rounded-xl px-4 py-3 outline-none border border-gray-700 focus:border-purple-500 resize-none transition-colors"
         />
       </div>
-
-      <div className="flex items-center gap-3 ml-13">
+      <div className="flex items-center gap-3">
         <button
           onClick={() => setConImagen(!conImagen)}
           className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
@@ -4234,7 +4204,6 @@ function FormularioPublicacion({ onPublicar }) {
           <p className="text-gray-600 text-xs">Se agregará una foto de ejemplo</p>
         )}
       </div>
-
       {error && <p className="text-red-400 text-xs">{error}</p>}
       <div className="flex items-center justify-between">
         <span className={`text-xs ${lleno ? 'text-red-400' : casiLleno ? 'text-amber-400' : 'text-gray-600'}`}>
@@ -4255,53 +4224,61 @@ function FormularioPublicacion({ onPublicar }) {
 }
 
 function Feed() {
-  const [publicaciones, setPublicaciones] = useState(publicacionesIniciales)
+  const [publicaciones, setPublicaciones] = useState([])
+  const [comentariosPorPost, setComentariosPorPost] = useState({})
+  const [cargando, setCargando] = useState(true)
 
-  const darLike = (id) => {
-    setPublicaciones(publicaciones.map(p =>
-      p.id === id ? { ...p, likes: p.likes + 1 } : p
-    ))
-  }
+  useEffect(() => {
+    const cargarDatos = async () => {
+      const posts = await obtenerPublicaciones()
+      setPublicaciones(posts)
 
-  const agregarComentario = (idPublicacion, texto) => {
-    setPublicaciones(publicaciones.map(p =>
-      p.id === idPublicacion
-        ? {
-            ...p,
-            comentarios: [
-              ...p.comentarios,
-              { id: p.comentarios.length + 1, autor: 'Tú', texto, fecha: 'Ahora' },
-            ],
-          }
-        : p
-    ))
-  }
-
-  const crearPublicacion = (contenido, conImagen) => {
-    const nueva = {
-      id: publicaciones.length + 1,
-      autor: 'Felipe Garces',
-      universidad: 'ITM',
-      carrera: 'Programación Web',
-      contenido,
-      fecha: 'Ahora',
-      likes: 0,
-      imagen: conImagen ? imagenesDemo[2] : null,
-      comentarios: [],
+      const comentariosMap = {}
+      for (const post of posts) {
+        comentariosMap[post.id] = await obtenerComentarios(post.id)
+      }
+      setComentariosPorPost(comentariosMap)
+      setCargando(false)
     }
-    setPublicaciones([nueva, ...publicaciones])
+    cargarDatos()
+  }, [])
+
+  const handleLike = (id) => {
+    setPublicaciones(publicaciones.map(p =>
+      p.id === id ? { ...p, likeCount: p.likeCount + 1 } : p
+    ))
   }
+
+  const handleAgregarComentario = (postId) => {
+    setPublicaciones(publicaciones.map(p =>
+      p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p
+    ))
+  }
+
+  const handleCrearPublicacion = async (contenido, conImagen) => {
+    const imagen = conImagen ? imagenesDemo[Math.floor(Math.random() * imagenesDemo.length)] : null
+    const nueva = await crearPublicacion(contenido, imagen)
+    setPublicaciones([nueva, ...publicaciones])
+    setComentariosPorPost({ [nueva.id]: [], ...comentariosPorPost })
+  }
+
+  if (cargando) return (
+    <div className="flex items-center justify-center py-20">
+      <p className="text-gray-500 text-sm">Cargando publicaciones...</p>
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold text-white">Feed</h1>
-      <FormularioPublicacion onPublicar={crearPublicacion} />
+      <FormularioPublicacion onPublicar={handleCrearPublicacion} />
       {publicaciones.map(publicacion => (
         <TarjetaPublicacion
           key={publicacion.id}
           publicacion={publicacion}
-          onLike={darLike}
-          onAgregarComentario={agregarComentario}
+          onLike={handleLike}
+          onAgregarComentario={handleAgregarComentario}
+          comentariosIniciales={comentariosPorPost[publicacion.id] || []}
         />
       ))}
     </div>
@@ -4412,6 +4389,69 @@ export const obtenerGrupos = async () => {
 
 --- FIN DEL ARCHIVO: ./frontend/src/services/grupos.js ---
 
+--- INICIO DEL ARCHIVO: ./frontend/src/services/usuarios.js ---
+const BASE_URL = 'http://localhost:5000/api'
+
+const usarMock = true
+
+export const registrarUsuario = async (datos) => {
+  if (usarMock) {
+    return {
+      id: 1,
+      userName: datos.userName,
+      email: datos.email,
+      careerName: datos.careerName,
+      semester: datos.semester,
+      universityId: datos.universityId,
+      universityName: 'ITM',
+      profilePictureUrl: '',
+      registerDate: new Date().toISOString(),
+    }
+  }
+
+  const response = await fetch(`${BASE_URL}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos),
+  })
+  const data = await response.json()
+  return data.data
+}
+
+export const iniciarSesion = async (email, password) => {
+  // Este endpoint no existe aún — se conectará cuando Moisés lo suba
+  // El endpoint esperado será: POST /api/auth/login
+  if (usarMock) {
+    return {
+      id: 1,
+      userName: 'Felipe Garces',
+      email,
+      careerName: 'Programación Web',
+      semester: 5,
+      universityName: 'ITM',
+      profilePictureUrl: '',
+    }
+  }
+
+  const response = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  const data = await response.json()
+  return data.data
+}
+
+export const obtenerUsuarioPorId = async (id) => {
+  if (usarMock) return null
+
+  const response = await fetch(`${BASE_URL}/users/${id}`)
+  const data = await response.json()
+  return data.data
+}
+
+--- FIN DEL ARCHIVO: ./frontend/src/services/usuarios.js ---
+
 --- INICIO DEL ARCHIVO: ./frontend/src/services/parches.js ---
 const BASE_URL = 'http://localhost:5292/api'
 
@@ -4471,45 +4511,132 @@ export const crearParche = async (nuevoParche) => {
 --- FIN DEL ARCHIVO: ./frontend/src/services/parches.js ---
 
 --- INICIO DEL ARCHIVO: ./frontend/src/services/publicaciones.js ---
-const BASE_URL = 'http://localhost:5292/api'
+const BASE_URL = 'http://localhost:5000/api'
 
 const publicacionesMock = [
   {
     id: 1,
-    autor: 'Valentina Ríos',
-    universidad: 'ITM',
-    carrera: 'Ingeniería de Sistemas',
-    contenido: 'Alguien más tiene el parcial de cálculo mañana? 😭',
-    fecha: 'Hace 10 minutos',
-    likes: 24,
+    userName: 'Valentina Ríos',
+    universityName: 'ITM',
+    careerName: 'Ingeniería de Sistemas',
+    content: 'Alguien más tiene el parcial de cálculo mañana? 😭',
+    createdAt: 'Hace 10 minutos',
+    likeCount: 24,
+    imageUrl: null,
+    commentCount: 1,
+    isLikedByCurrentUser: false,
   },
   {
     id: 2,
-    autor: 'Sebastián Mora',
-    universidad: 'UdeA',
-    carrera: 'Medicina',
-    contenido: 'Terminé el semestre con todas las materias. No lo puedo creer.',
-    fecha: 'Hace 1 hora',
-    likes: 87,
+    userName: 'Sebastián Mora',
+    universityName: 'UdeA',
+    careerName: 'Medicina',
+    content: 'Terminé el semestre con todas las materias. No lo puedo creer.',
+    createdAt: 'Hace 1 hora',
+    likeCount: 87,
+    imageUrl: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&q=80',
+    commentCount: 0,
+    isLikedByCurrentUser: false,
   },
   {
     id: 3,
-    autor: 'Daniela Castro',
-    universidad: 'EAFIT',
-    carrera: 'Administración',
-    contenido: 'Buscando grupo para el proyecto de finanzas. Somos 2, necesitamos 1 más.',
-    fecha: 'Hace 3 horas',
-    likes: 5,
+    userName: 'Daniela Castro',
+    universityName: 'EAFIT',
+    careerName: 'Administración',
+    content: 'Buscando grupo para el proyecto de finanzas. Somos 2, necesitamos 1 más.',
+    createdAt: 'Hace 3 horas',
+    likeCount: 5,
+    imageUrl: null,
+    commentCount: 2,
+    isLikedByCurrentUser: false,
   },
 ]
+
+const comentariosMock = {
+  1: [
+    { id: 1, userName: 'Sebastián Mora', content: 'Yo también! Qué parcial tan difícil.', createdAt: 'Hace 5 minutos', userProfilePictureUrl: '' },
+  ],
+  2: [],
+  3: [
+    { id: 1, userName: 'Luis M.', content: 'Yo me uno! Mándame mensaje.', createdAt: 'Hace 2 horas', userProfilePictureUrl: '' },
+    { id: 2, userName: 'Valentina Ríos', content: 'También estoy interesada.', createdAt: 'Hace 1 hora', userProfilePictureUrl: '' },
+  ],
+}
 
 const usarMock = true
 
 export const obtenerPublicaciones = async () => {
   if (usarMock) return publicacionesMock
 
-  const response = await fetch(`${BASE_URL}/publicaciones`)
-  return response.json()
+  const response = await fetch(`${BASE_URL}/posts`)
+  const data = await response.json()
+  return data.data
+}
+
+export const crearPublicacion = async (contenido, imageUrl = null, userId = 1) => {
+  if (usarMock) {
+    return {
+      id: Date.now(),
+      userName: 'Felipe Garces',
+      universityName: 'ITM',
+      careerName: 'Programación Web',
+      content: contenido,
+      createdAt: 'Ahora',
+      likeCount: 0,
+      imageUrl,
+      commentCount: 0,
+      isLikedByCurrentUser: false,
+    }
+  }
+
+  const response = await fetch(`${BASE_URL}/posts`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content: contenido, imageUrl, userId }),
+  })
+  const data = await response.json()
+  return data.data
+}
+
+export const obtenerComentarios = async (postId) => {
+  if (usarMock) return comentariosMock[postId] || []
+
+  const response = await fetch(`${BASE_URL}/comments/post/${postId}`)
+  const data = await response.json()
+  return data.data
+}
+
+export const crearComentario = async (postId, content, userId = 1) => {
+  if (usarMock) {
+    return {
+      id: Date.now(),
+      userName: 'Tú',
+      content,
+      createdAt: 'Ahora',
+      postId,
+      userProfilePictureUrl: '',
+    }
+  }
+
+  const response = await fetch(`${BASE_URL}/comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ content, postId, userId }),
+  })
+  const data = await response.json()
+  return data.data
+}
+
+export const darLike = async (postId, userId = 1) => {
+  if (usarMock) return { id: Date.now(), postId, userId, reactionType: 0 }
+
+  const response = await fetch(`${BASE_URL}/likes`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ postId, userId, reactionType: 0 }),
+  })
+  const data = await response.json()
+  return data.data
 }
 
 --- FIN DEL ARCHIVO: ./frontend/src/services/publicaciones.js ---
@@ -9946,7 +10073,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UniParche.DataAccess")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bd8e96bc395768e7269cdf6f954ea7481fbc1893")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0291010ee827fdeb658825fef96cd66177376651")]
 [assembly: System.Reflection.AssemblyProductAttribute("UniParche.DataAccess")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UniParche.DataAccess")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
@@ -9971,7 +10098,7 @@ global using System.Threading.Tasks;
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/obj/Debug/net10.0/UniParche.DataAccess.GlobalUsings.g.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/obj/Debug/net10.0/UniParche.DataAccess.AssemblyInfoInputs.cache ---
-15f9c630aab576e920d00eab0efeefc52f4cc21a49c7b918f83a45196175085b
+092a8c469b8081d9f5b2e471b83750a6546cd64abafa861f125bf074f519e1fb
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/obj/Debug/net10.0/UniParche.DataAccess.AssemblyInfoInputs.cache ---
@@ -11148,106 +11275,167 @@ namespace UniParche.DataAccess.DbContext;
 public class UniParcheDbContext : Microsoft.EntityFrameworkCore.DbContext
 {
     public UniParcheDbContext(DbContextOptions<UniParcheDbContext> options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
+    // ========== DbSets ==========
     public DbSet<User> Users { get; set; }
     public DbSet<University> Universities { get; set; }
     public DbSet<Post> Posts { get; set; }
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Like> Likes { get; set; }
+    public DbSet<Event> Events { get; set; }
+    public DbSet<EventAttendee> EventAttendees { get; set; }
+    public DbSet<Group> Groups { get; set; }
+    public DbSet<GroupMember> GroupMembers { get; set; }
+    public DbSet<Friendship> Friendships { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // ═══ Universidad → Usuarios (One-to-Many) ═══
+        // ═══ Universidad → Usuarios ═══
         modelBuilder.Entity<University>()
             .HasMany(u => u.Users)
             .WithOne(u => u.University)
             .HasForeignKey(u => u.UniversityId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // ═══ Usuario → Posts (One-to-Many) ═══
+        // ═══ Usuario → Posts ═══
         modelBuilder.Entity<User>()
             .HasMany<Post>()
             .WithOne(p => p.User)
             .HasForeignKey(p => p.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ═══ Usuario → Comentarios (One-to-Many) ═══
+        // ═══ Usuario → Comentarios ═══
         modelBuilder.Entity<User>()
             .HasMany<Comment>()
             .WithOne(c => c.User)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // ═══ Usuario → Likes (One-to-Many) ═══
+        // ═══ Usuario → Likes ═══
         modelBuilder.Entity<User>()
             .HasMany<Like>()
             .WithOne(l => l.User)
             .HasForeignKey(l => l.UserId)
             .OnDelete(DeleteBehavior.NoAction);
 
-        // ═══ Post → Comentarios (One-to-Many) ═══
+        // ═══ Post → Comentarios ═══
         modelBuilder.Entity<Post>()
             .HasMany<Comment>()
             .WithOne(c => c.Post)
             .HasForeignKey(c => c.PostId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ═══ Post → Likes (One-to-Many) ═══
+        // ═══ Post → Likes ═══
         modelBuilder.Entity<Post>()
             .HasMany<Like>()
             .WithOne(l => l.Post)
             .HasForeignKey(l => l.PostId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ═══ Configuración de propiedades de Like ═══
+        // ═══ Like → ReactionType ═══
         modelBuilder.Entity<Like>()
             .Property(l => l.ReactionType)
             .HasConversion<int>();
 
-        // ═══ Índices para optimización ═══
+        // ═══ Event → Creator (User) ═══
+        modelBuilder.Entity<Event>()
+            .HasOne(e => e.Creator)
+            .WithMany()
+            .HasForeignKey(e => e.CreatorId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // ═══ Event → University ═══
+        modelBuilder.Entity<Event>()
+            .HasOne(e => e.University)
+            .WithMany()
+            .HasForeignKey(e => e.UniversityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ═══ EventAttendee → Event + User ═══
+        modelBuilder.Entity<EventAttendee>()
+            .HasOne(ea => ea.Event)
+            .WithMany(e => e.EventAttendees)
+            .HasForeignKey(ea => ea.EventId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<EventAttendee>()
+            .HasOne(ea => ea.User)
+            .WithMany()
+            .HasForeignKey(ea => ea.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // ═══ Group → Creator (User) ═══
+        modelBuilder.Entity<Group>()
+            .HasOne(g => g.Creator)
+            .WithMany()
+            .HasForeignKey(g => g.CreatorId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // ═══ Group → University ═══
+        modelBuilder.Entity<Group>()
+            .HasOne(g => g.University)
+            .WithMany()
+            .HasForeignKey(g => g.UniversityId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // ═══ GroupMember → Group + User ═══
+        modelBuilder.Entity<GroupMember>()
+            .HasOne(gm => gm.Group)
+            .WithMany(g => g.Members)
+            .HasForeignKey(gm => gm.GroupId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<GroupMember>()
+            .HasOne(gm => gm.User)
+            .WithMany()
+            .HasForeignKey(gm => gm.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // ═══ Friendship → User1 + User2 ═══
+        modelBuilder.Entity<Friendship>()
+            .HasOne(f => f.User1)
+            .WithMany()
+            .HasForeignKey(f => f.User1Id)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Friendship>()
+            .HasOne(f => f.User2)
+            .WithMany()
+            .HasForeignKey(f => f.User2Id)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // ═══ Índices ═══
         modelBuilder.Entity<Post>()
-            .HasIndex(p => p.UserId)
-            .HasDatabaseName("IX_Post_UserId");
-
+            .HasIndex(p => p.UserId).HasDatabaseName("IX_Post_UserId");
         modelBuilder.Entity<Post>()
-            .HasIndex(p => p.CreatedAt)
-            .HasDatabaseName("IX_Post_CreatedAt");
-
+            .HasIndex(p => p.CreatedAt).HasDatabaseName("IX_Post_CreatedAt");
         modelBuilder.Entity<Comment>()
-            .HasIndex(c => c.PostId)
-            .HasDatabaseName("IX_Comment_PostId");
-
+            .HasIndex(c => c.PostId).HasDatabaseName("IX_Comment_PostId");
         modelBuilder.Entity<Comment>()
-            .HasIndex(c => c.UserId)
-            .HasDatabaseName("IX_Comment_UserId");
-
+            .HasIndex(c => c.UserId).HasDatabaseName("IX_Comment_UserId");
         modelBuilder.Entity<Like>()
             .HasIndex(l => new { l.UserId, l.PostId })
-            .HasDatabaseName("IX_Like_UserIdPostId")
-            .IsUnique();
-
+            .HasDatabaseName("IX_Like_UserIdPostId").IsUnique();
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.Email)
-            .HasDatabaseName("IX_User_Email")
-            .IsUnique();
-
+            .HasIndex(u => u.Email).HasDatabaseName("IX_User_Email").IsUnique();
         modelBuilder.Entity<User>()
-            .HasIndex(u => u.UserName)
-            .HasDatabaseName("IX_User_UserName")
-            .IsUnique();
-
+            .HasIndex(u => u.UserName).HasDatabaseName("IX_User_UserName").IsUnique();
         modelBuilder.Entity<University>()
-            .HasIndex(u => u.DomainEmail)
-            .HasDatabaseName("IX_University_DomainEmail")
-            .IsUnique();
+            .HasIndex(u => u.DomainEmail).HasDatabaseName("IX_University_DomainEmail").IsUnique();
+        modelBuilder.Entity<EventAttendee>()
+            .HasIndex(ea => new { ea.EventId, ea.UserId })
+            .HasDatabaseName("IX_EventAttendee_EventId_UserId").IsUnique();
+        modelBuilder.Entity<GroupMember>()
+            .HasIndex(gm => new { gm.GroupId, gm.UserId })
+            .HasDatabaseName("IX_GroupMember_GroupId_UserId").IsUnique();
+        modelBuilder.Entity<Friendship>()
+            .HasIndex(f => new { f.User1Id, f.User2Id })
+            .HasDatabaseName("IX_Friendship_User1Id_User2Id").IsUnique();
     }
 }
-
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/DbContext/UniParcheDbContext.cs ---
 
@@ -11678,6 +11866,149 @@ public class UniversityRepository : GenericRepository<University>, IUniversityRe
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/UniversityRepository.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/GroupRepository.cs ---
+using Microsoft.EntityFrameworkCore;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.DataAccess.DbContext;
+
+namespace UniParche.DataAccess.Repositories;
+
+public class GroupRepository : GenericRepository<Group>, IGroupRepository
+{
+    public GroupRepository(UniParcheDbContext context) : base(context)
+    {
+    }
+
+    // ═══ Grupos por Universidad ═══
+
+    /// <summary>
+    /// Retorna todos los grupos de una universidad específica
+    /// </summary>
+    public async Task<IEnumerable<Group>> GetByUniversityAsync(int universityId)
+    {
+        return await _dbSet
+            .Where(g => g.UniversityId == universityId)
+            .OrderByDescending(g => g.Id)
+            .ToListAsync();
+    }
+
+    // ═══ Grupo con Miembros ═══
+
+    /// <summary>
+    /// Retorna un grupo incluyendo su lista completa de miembros
+    /// </summary>
+    public async Task<Group?> GetWithMembersAsync(int id)
+    {
+        return await _dbSet
+            .Include(g => g.Members)
+            .FirstOrDefaultAsync(g => g.Id == id);
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/GroupRepository.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/ FriendshipRepository.cs ---
+using Microsoft.EntityFrameworkCore;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.DataAccess.DbContext;
+
+namespace UniParche.DataAccess.Repositories;
+
+public class FriendshipRepository : GenericRepository<Friendship>, IFriendshipRepository
+{
+    public FriendshipRepository(UniParcheDbContext context) : base(context)
+    {
+    }
+
+    // ═══ Amistades por Usuario ═══
+
+    /// <summary>
+    /// Retorna todas las amistades de un usuario,
+    /// tanto las enviadas como las recibidas
+    /// </summary>
+    public async Task<IEnumerable<Friendship>> GetByUserAsync(int userId)
+    {
+        return await _dbSet
+            .Where(f => f.RequesterId == userId || f.AddresseeId == userId)
+            .OrderByDescending(f => f.Id)
+            .ToListAsync();
+    }
+
+    // ═══ Relación entre dos Usuarios ═══
+
+    /// <summary>
+    /// Retorna la relación de amistad entre dos usuarios específicos.
+    /// Busca en ambas direcciones. Retorna null si no existe relación.
+    /// </summary>
+    public async Task<Friendship?> GetBetweenUsersAsync(int user1Id, int user2Id)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(f =>
+                (f.RequesterId == user1Id && f.AddresseeId == user2Id) ||
+                (f.RequesterId == user2Id && f.AddresseeId == user1Id));
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/ FriendshipRepository.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/EventRepository.cs ---
+using Microsoft.EntityFrameworkCore;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.DataAccess.DbContext;
+
+namespace UniParche.DataAccess.Repositories;
+
+public class EventRepository : GenericRepository<Event>, IEventRepository
+{
+	public EventRepository(UniParcheDbContext context) : base(context)
+	{
+	}
+
+	// ═══ Parches por Universidad ═══
+
+	/// <summary>
+	/// Retorna todos los parches de una universidad específica
+	/// ordenados por fecha de creación descendente
+	/// </summary>
+	public async Task<IEnumerable<Event>> GetByUniversityAsync(int universityId)
+	{
+		return await _dbSet
+			.Where(e => e.UniversityId == universityId)
+			.OrderByDescending(e => e.Id)
+			.ToListAsync();
+	}
+
+	// ═══ Parches por Creador ═══
+
+	/// <summary>
+	/// Retorna todos los parches creados por un usuario específico
+	/// </summary>
+	public async Task<IEnumerable<Event>> GetByCreatorAsync(int creatorId)
+	{
+		return await _dbSet
+			.Where(e => e.CreatorId == creatorId)
+			.OrderByDescending(e => e.Id)
+			.ToListAsync();
+	}
+
+	// ═══ Parche con Asistentes ═══
+
+	/// <summary>
+	/// Retorna un parche incluyendo su lista completa de asistentes
+	/// </summary>
+	public async Task<Event?> GetWithAttendeesAsync(int id)
+	{
+		return await _dbSet
+			.Include(e => e.Attendees)
+			.FirstOrDefaultAsync(e => e.Id == id);
+	}
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/EventRepository.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/PostRepository.cs ---
 using Microsoft.EntityFrameworkCore;
 using UniParche.Domain.Entities;
@@ -12008,6 +12339,61 @@ public class UserRepository : GenericRepository<User>, IUserRepository
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/UserRepository.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/GroupMemberRepository.cs ---
+using Microsoft.EntityFrameworkCore;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.DataAccess.DbContext;
+
+namespace UniParche.DataAccess.Repositories;
+
+public class GroupMemberRepository : GenericRepository<GroupMember>, IGroupMemberRepository
+{
+    public GroupMemberRepository(UniParcheDbContext context) : base(context)
+    {
+    }
+
+    // ═══ Miembros por Grupo ═══
+
+    /// <summary>
+    /// Retorna todos los miembros de un grupo específico
+    /// </summary>
+    public async Task<IEnumerable<GroupMember>> GetByGroupAsync(int groupId)
+    {
+        return await _dbSet
+            .Where(m => m.GroupId == groupId)
+            .OrderByDescending(m => m.Id)
+            .ToListAsync();
+    }
+
+    // ═══ Grupos por Usuario ═══
+
+    /// <summary>
+    /// Retorna todos los grupos a los que pertenece un usuario
+    /// </summary>
+    public async Task<IEnumerable<GroupMember>> GetByUserAsync(int userId)
+    {
+        return await _dbSet
+            .Where(m => m.UserId == userId)
+            .OrderByDescending(m => m.Id)
+            .ToListAsync();
+    }
+
+    // ═══ Membresía Específica ═══
+
+    /// <summary>
+    /// Retorna la membresía de un usuario en un grupo específico.
+    /// Retorna null si el usuario no es miembro.
+    /// </summary>
+    public async Task<GroupMember?> GetByGroupAndUserAsync(int groupId, int userId)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(m => m.GroupId == groupId && m.UserId == userId);
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/GroupMemberRepository.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/CommentRepository.cs ---
 using Microsoft.EntityFrameworkCore;
 using UniParche.Domain.Entities;
@@ -12095,6 +12481,61 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/CommentRepository.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/EventAttendeeRepository.cs ---
+using Microsoft.EntityFrameworkCore;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.DataAccess.DbContext;
+
+namespace UniParche.DataAccess.Repositories;
+
+public class EventAttendeeRepository : GenericRepository<EventAttendee>, IEventAttendeeRepository
+{
+    public EventAttendeeRepository(UniParcheDbContext context) : base(context)
+    {
+    }
+
+    // ═══ Asistentes por Parche ═══
+
+    /// <summary>
+    /// Retorna todos los asistentes de un parche específico
+    /// </summary>
+    public async Task<IEnumerable<EventAttendee>> GetByEventAsync(int eventId)
+    {
+        return await _dbSet
+            .Where(a => a.EventId == eventId)
+            .OrderByDescending(a => a.Id)
+            .ToListAsync();
+    }
+
+    // ═══ Parches por Usuario ═══
+
+    /// <summary>
+    /// Retorna todas las inscripciones de un usuario específico
+    /// </summary>
+    public async Task<IEnumerable<EventAttendee>> GetByUserAsync(int userId)
+    {
+        return await _dbSet
+            .Where(a => a.UserId == userId)
+            .OrderByDescending(a => a.Id)
+            .ToListAsync();
+    }
+
+    // ═══ Inscripción Específica ═══
+
+    /// <summary>
+    /// Retorna la inscripción de un usuario en un parche específico.
+    /// Retorna null si no existe.
+    /// </summary>
+    public async Task<EventAttendee?> GetByEventAndUserAsync(int eventId, int userId)
+    {
+        return await _dbSet
+            .FirstOrDefaultAsync(a => a.EventId == eventId && a.UserId == userId);
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Repositories/EventAttendeeRepository.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/UniParche.DataAccess.csproj ---
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
@@ -12124,6 +12565,113 @@ public class CommentRepository : GenericRepository<Comment>, ICommentRepository
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/UniParche.DataAccess.csproj ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.DataAccess/Seeders/DataSeeder.cs ---
+using Microsoft.EntityFrameworkCore;
+using UniParche.DataAccess.DbContext;
+using UniParche.Domain.Entities;
+
+namespace UniParche.DataAccess.Seeders;
+
+public static class DataSeeder
+{
+	public static async Task SeedAsync(UniParcheDbContext context)
+	{
+		await context.Database.MigrateAsync();
+
+		// ═══════════════════════════════════════
+		//  1. UNIVERSITIES
+		// ═══════════════════════════════════════
+		if (!await context.Universities.AnyAsync())
+		{
+			var universities = new List<University>
+			{
+				new() { Name = "Universidad de Antioquia",          DomainEmail = "udea.edu.co" },
+				new() { Name = "Universidad Nacional de Colombia",   DomainEmail = "unal.edu.co" },
+				new() { Name = "EAFIT",                             DomainEmail = "eafit.edu.co" },
+				new() { Name = "Universidad Pontificia Bolivariana", DomainEmail = "upb.edu.co" }
+			};
+			await context.Universities.AddRangeAsync(universities);
+			await context.SaveChangesAsync();
+		}
+
+		// ═══════════════════════════════════════
+		//  2. USERS
+		// ═══════════════════════════════════════
+		if (!await context.Users.AnyAsync())
+		{
+			var udea = await context.Universities.FirstAsync(u => u.DomainEmail == "udea.edu.co");
+			var unal = await context.Universities.FirstAsync(u => u.DomainEmail == "unal.edu.co");
+			var eafit = await context.Universities.FirstAsync(u => u.DomainEmail == "eafit.edu.co");
+			var upb = await context.Universities.FirstAsync(u => u.DomainEmail == "upb.edu.co");
+
+			var users = new List<User>
+			{
+				new() {
+					UserName = "carlos_dev",
+					Email = "carlos@udea.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Ingeniería de Sistemas",
+					Semester = 6,
+					UniversityId = udea.Id,
+					RegisterTime = DateTime.UtcNow.AddMonths(-5)
+				},
+				new() {
+					UserName = "valentina_m",
+					Email = "valentina@udea.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Psicología",
+					Semester = 4,
+					UniversityId = udea.Id,
+					RegisterTime = DateTime.UtcNow.AddMonths(-4)
+				},
+				new() {
+					UserName = "santiago_unal",
+					Email = "santiago@unal.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Ingeniería Civil",
+					Semester = 8,
+					UniversityId = unal.Id,
+					RegisterTime = DateTime.UtcNow.AddMonths(-6)
+				},
+				new() {
+					UserName = "laura_eafit",
+					Email = "laura@eafit.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Administración de Negocios",
+					Semester = 5,
+					UniversityId = eafit.Id,
+					RegisterTime = DateTime.UtcNow.AddMonths(-3)
+				},
+				new() {
+					UserName = "miguel_dev",
+					Email = "miguel@udea.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Ingeniería de Sistemas",
+					Semester = 7,
+					UniversityId = udea.Id,
+					RegisterTime = DateTime.UtcNow.AddMonths(-7)
+				},
+				new() {
+					UserName = "andrea_upb",
+					Email = "andrea@upb.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Diseño Gráfico",
+					Semester = 3,
+					UniversityId = upb.Id,
+					RegisterTime = DateTime.UtcNow.AddMonths(-2)
+				},
+				new() {
+					UserName = "juanpa_unal",
+					Email = "juanpa@unal.edu.co",
+					PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
+					CareerName = "Física",
+					Semester = 9,
+					UniversityId = unal.Id,
+
+					
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.DataAccess/Seeders/DataSeeder.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.slnx ---
 <Solution>
@@ -13260,7 +13808,7 @@ global using System.Threading.Tasks;
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/obj/Debug/net10.0/UniParche.Domain.GlobalUsings.g.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/obj/Debug/net10.0/UniParche.Domain.AssemblyInfoInputs.cache ---
-203499c659caf0d14a455e7d7a4698bbbda70d5e44512758af651af9dd599edb
+5e157bd8e778da02637306a3bd42511bfb5b9abace7f3d7dceb072dc2e31dda6
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/obj/Debug/net10.0/UniParche.Domain.AssemblyInfoInputs.cache ---
@@ -13312,7 +13860,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UniParche.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bd8e96bc395768e7269cdf6f954ea7481fbc1893")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+098b1416170f378db84d1e1b5fc6d1b0ca48244e")]
 [assembly: System.Reflection.AssemblyProductAttribute("UniParche.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UniParche.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
@@ -13397,7 +13945,16 @@ namespace UniParche.Domain.Enums
         Confirmed,
         Rejected
     }
+<<<<<<< HEAD
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Enums/AttendanceStatus.cs ---
 
@@ -13408,14 +13965,42 @@ namespace UniParche.Domain.Enums
     {
         Upcoming,
         InProgress,
+<<<<<<< HEAD
+<<<<<<< HEAD
+        Completed,
+        Cancelled
+    }
+}
+=======
         Finished,
         Cancelled
     }
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+        Finished,
+        Cancelled
+    }
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Enums/EventStatus.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Enums/GroupRole.cs ---
+<<<<<<< HEAD
+<<<<<<< HEAD
+namespace Uniparches.Domain.Enums
+{
+    public enum GroupRole
+    {
+        Administrator,
+        Member,
+    }
+}
+=======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 namespace UniParche.Domain.Enums
 {
 	public enum GroupRole
@@ -13423,11 +14008,31 @@ namespace UniParche.Domain.Enums
 		Administrator,
 		Member
 	}
+<<<<<<< HEAD
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Enums/GroupRole.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Enums/GroupType.cs ---
+<<<<<<< HEAD
+<<<<<<< HEAD
+namespace Uniparches.Domain.Enums
+{
+    public enum GroupType
+    {
+        Study,
+        Social,
+        Sports
+    }
+}
+=======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 namespace UniParche.Domain.Enums
 {
 	public enum GroupType
@@ -13436,12 +14041,26 @@ namespace UniParche.Domain.Enums
 		Social,
 		Sports
 	}
+<<<<<<< HEAD
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Enums/GroupType.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Enums/FriendshipStatus.cs ---
+<<<<<<< HEAD
+<<<<<<< HEAD
+namespace Uniparches.Domain.Enums
+=======
 namespace UniParche.Domain.Enums
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+namespace UniParche.Domain.Enums
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 {
     public enum FriendshipStatus
     {
@@ -13450,7 +14069,16 @@ namespace UniParche.Domain.Enums
         Rejected,
         Blocked
     }
+<<<<<<< HEAD
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Enums/FriendshipStatus.cs ---
 
@@ -13464,7 +14092,17 @@ namespace UniParche.Domain.Enums
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< HEAD
+<<<<<<< HEAD
+    <Folder Include="Interfaces\Services\" />
+    <Folder Include="Interfaces\Repositories\" />
+    <Folder Include="Services\" />
+=======
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
   </ItemGroup>
 
 </Project>
@@ -14053,6 +14691,335 @@ public class UserService : IUserService
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/UserService.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Services/EventService.cs ---
+using Microsoft.Extensions.Logging;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Enums;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.Domain.Interfaces.Services;
+
+namespace UniParche.Domain.Services;
+
+/// <summary>
+/// Implementación del servicio de parches/eventos
+/// </summary>
+public class EventService : IEventService
+{
+	private readonly IGenericRepository<Event> _eventRepository;
+	private readonly ILogger<EventService> _logger;
+
+	public EventService(
+		IGenericRepository<Event> eventRepository,
+		ILogger<EventService> logger)
+	{
+		_eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
+		_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+	}
+
+	// ═══ Consultas ═══
+
+	public async Task<IEnumerable<Event>> GetAllEventsAsync()
+	{
+		_logger.LogInformation("Obteniendo todos los parches");
+		return await _eventRepository.GetAllAsync();
+	}
+
+	public async Task<Event?> GetEventByIdAsync(int eventId)
+	{
+		if (eventId <= 0) return null;
+
+		_logger.LogInformation("Obteniendo parche con ID {EventId}", eventId);
+		return await _eventRepository.GetByIdAsync(eventId);
+	}
+
+	public async Task<IEnumerable<Event>> GetEventsByUniversityAsync(int universityId)
+	{
+		if (universityId <= 0) return Enumerable.Empty<Event>();
+
+		_logger.LogInformation("Obteniendo parches de la universidad {UniversityId}", universityId);
+		return await _eventRepository.GetByExpressionAsync(e => e.UniversityId == universityId);
+	}
+
+	public async Task<IEnumerable<Event>> GetEventsByCreatorAsync(int creatorId)
+	{
+		if (creatorId <= 0) return Enumerable.Empty<Event>();
+
+		_logger.LogInformation("Obteniendo parches del creador {CreatorId}", creatorId);
+		return await _eventRepository.GetByExpressionAsync(e => e.CreatorId == creatorId);
+	}
+
+	// ═══ Crear, Actualizar, Eliminar ═══
+
+	public async Task<Event> CreateEventAsync(Event entity, int creatorId)
+	{
+		if (entity == null)
+			throw new ArgumentNullException(nameof(entity));
+		if (string.IsNullOrWhiteSpace(entity.Title))
+			throw new ArgumentException("El título del parche es obligatorio.");
+		if (entity.EventDate < DateTime.UtcNow)
+			throw new ArgumentException("La fecha del parche no puede ser en el pasado.");
+		if (entity.Capacity <= 0)
+			throw new ArgumentException("Los cupos deben ser mayor a 0.");
+
+		entity.CreatorId = creatorId;
+		entity.Status = EventStatus.Upcoming;
+		entity.CreatedAt = DateTime.UtcNow;
+		entity.UpdatedAt = DateTime.UtcNow;
+
+		_logger.LogInformation("Creando nuevo parche: {Title}", entity.Title);
+		return await _eventRepository.AddAsync(entity);
+	}
+
+	public async Task<Event> UpdateEventAsync(Event entity)
+	{
+		if (entity == null)
+			throw new ArgumentNullException(nameof(entity));
+		if (entity.Id <= 0)
+			throw new ArgumentException("El parche debe tener un ID válido.");
+		if (string.IsNullOrWhiteSpace(entity.Title))
+			throw new ArgumentException("El título del parche es obligatorio.");
+
+		var existing = await _eventRepository.GetByIdAsync(entity.Id)
+			?? throw new KeyNotFoundException($"No se encontró el parche con ID {entity.Id}.");
+
+		existing.Title = entity.Title;
+		existing.Description = entity.Description;
+		existing.Location = entity.Location;
+		existing.EventDate = entity.EventDate;
+		existing.Capacity = entity.Capacity;
+		existing.ImageUrl = entity.ImageUrl;
+		existing.Status = entity.Status;
+		existing.UpdatedAt = DateTime.UtcNow;
+
+		_logger.LogInformation("Actualizando parche: {EventId}", entity.Id);
+		return await _eventRepository.UpdateAsync(existing);
+	}
+
+	public async Task<bool> DeleteEventAsync(int eventId)
+	{
+		var existing = await _eventRepository.GetByIdAsync(eventId)
+			?? throw new KeyNotFoundException($"No se encontró el parche con ID {eventId}.");
+
+		_logger.LogInformation("Eliminando parche: {EventId}", eventId);
+		return await _eventRepository.DeleteAsync(eventId);
+	}
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/EventService.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Services/GroupServices.cs ---
+using Microsoft.Extensions.Logging;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.Domain.Interfaces.Services;
+
+namespace UniParche.Domain.Services;
+
+/// <summary>
+/// Implementación del servicio de grupos de estudio
+/// </summary>
+public class GroupService : IGroupService
+{
+    private readonly IGenericRepository<Group> _groupRepository;
+    private readonly ILogger<GroupService> _logger;
+
+    public GroupService(
+        IGenericRepository<Group> groupRepository,
+        ILogger<GroupService> logger)
+    {
+        _groupRepository = groupRepository ?? throw new ArgumentNullException(nameof(groupRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    // ═══ Consultas ═══
+
+    public async Task<IEnumerable<Group>> GetAllGroupsAsync()
+    {
+        _logger.LogInformation("Obteniendo todos los grupos");
+        return await _groupRepository.GetAllAsync();
+    }
+
+    public async Task<Group?> GetGroupByIdAsync(int groupId)
+    {
+        if (groupId <= 0) return null;
+
+        _logger.LogInformation("Obteniendo grupo con ID {GroupId}", groupId);
+        return await _groupRepository.GetByIdAsync(groupId);
+    }
+
+    public async Task<IEnumerable<Group>> GetGroupsByUniversityAsync(int universityId)
+    {
+        if (universityId <= 0) return Enumerable.Empty<Group>();
+
+        _logger.LogInformation("Obteniendo grupos de la universidad {UniversityId}", universityId);
+        return await _groupRepository.GetByExpressionAsync(g => g.UniversityId == universityId);
+    }
+
+    public async Task<IEnumerable<Group>> GetGroupsByCreatorAsync(int creatorId)
+    {
+        if (creatorId <= 0) return Enumerable.Empty<Group>();
+
+        _logger.LogInformation("Obteniendo grupos del creador {CreatorId}", creatorId);
+        return await _groupRepository.GetByExpressionAsync(g => g.CreatorId == creatorId);
+    }
+
+    // ═══ Crear, Actualizar, Eliminar ═══
+
+    public async Task<Group> CreateGroupAsync(Group entity, int creatorId)
+    {
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity));
+        if (string.IsNullOrWhiteSpace(entity.Name))
+            throw new ArgumentException("El nombre del grupo es obligatorio.");
+        if (string.IsNullOrWhiteSpace(entity.Subject))
+            throw new ArgumentException("La materia del grupo es obligatoria.");
+
+        entity.CreatorId = creatorId;
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
+
+        _logger.LogInformation("Creando nuevo grupo: {Name}", entity.Name);
+        return await _groupRepository.AddAsync(entity);
+    }
+
+    public async Task<Group> UpdateGroupAsync(Group entity)
+    {
+        if (entity == null)
+            throw new ArgumentNullException(nameof(entity));
+        if (entity.Id <= 0)
+            throw new ArgumentException("El grupo debe tener un ID válido.");
+        if (string.IsNullOrWhiteSpace(entity.Name))
+            throw new ArgumentException("El nombre del grupo es obligatorio.");
+
+        var existing = await _groupRepository.GetByIdAsync(entity.Id)
+            ?? throw new KeyNotFoundException($"No se encontró el grupo con ID {entity.Id}.");
+
+        existing.Name = entity.Name;
+        existing.Description = entity.Description;
+        existing.Subject = entity.Subject;
+        existing.Type = entity.Type;
+        existing.UpdatedAt = DateTime.UtcNow;
+
+        _logger.LogInformation("Actualizando grupo: {GroupId}", entity.Id);
+        return await _groupRepository.UpdateAsync(existing);
+    }
+
+    public async Task<bool> DeleteGroupAsync(int groupId)
+    {
+        var existing = await _groupRepository.GetByIdAsync(groupId)
+            ?? throw new KeyNotFoundException($"No se encontró el grupo con ID {groupId}.");
+
+        _logger.LogInformation("Eliminando grupo: {GroupId}", groupId);
+        return await _groupRepository.DeleteAsync(groupId);
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/GroupServices.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Services/FriendshipService.cs ---
+using Microsoft.Extensions.Logging;
+using UniParche.Domain.Entities;
+using UniParche.Domain.Enums;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.Domain.Interfaces.Services;
+
+namespace UniParche.Domain.Services;
+
+/// <summary>
+/// Implementación del servicio de amistades
+/// </summary>
+public class FriendshipService : IFriendshipService
+{
+    private readonly IGenericRepository<Friendship> _friendshipRepository;
+    private readonly ILogger<FriendshipService> _logger;
+
+    public FriendshipService(
+        IGenericRepository<Friendship> friendshipRepository,
+        ILogger<FriendshipService> logger)
+    {
+        _friendshipRepository = friendshipRepository ?? throw new ArgumentNullException(nameof(friendshipRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    // ═══ Consultas ═══
+
+    public async Task<IEnumerable<Friendship>> GetFriendsByUserAsync(int userId)
+    {
+        if (userId <= 0) return Enumerable.Empty<Friendship>();
+
+        _logger.LogInformation("Obteniendo amigos del usuario {UserId}", userId);
+        return await _friendshipRepository.GetByExpressionAsync(f =>
+            (f.User1Id == userId || f.User2Id == userId) &&
+            f.Status == FriendshipStatus.Accepted);
+    }
+
+    public async Task<Friendship?> GetFriendshipAsync(int user1Id, int user2Id)
+    {
+        _logger.LogInformation("Buscando amistad entre {User1Id} y {User2Id}", user1Id, user2Id);
+        return await _friendshipRepository.FirstOrDefaultAsync(f =>
+            (f.User1Id == user1Id && f.User2Id == user2Id) ||
+            (f.User1Id == user2Id && f.User2Id == user1Id));
+    }
+
+    public async Task<IEnumerable<Friendship>> GetPendingRequestsAsync(int userId)
+    {
+        if (userId <= 0) return Enumerable.Empty<Friendship>();
+
+        _logger.LogInformation("Obteniendo solicitudes pendientes del usuario {UserId}", userId);
+        return await _friendshipRepository.GetByExpressionAsync(f =>
+            f.User2Id == userId &&
+            f.Status == FriendshipStatus.Pending);
+    }
+
+    // ═══ Acciones ═══
+
+    public async Task<Friendship> SendRequestAsync(int user1Id, int user2Id)
+    {
+        if (user1Id == user2Id)
+            throw new ArgumentException("No puedes enviarte una solicitud a ti mismo.");
+
+        var existing = await GetFriendshipAsync(user1Id, user2Id);
+        if (existing != null)
+            throw new InvalidOperationException("Ya existe una solicitud o amistad entre estos usuarios.");
+
+        var friendship = new Friendship
+        {
+            User1Id = user1Id,
+            User2Id = user2Id,
+            Status = FriendshipStatus.Pending,
+            Date = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _logger.LogInformation("Usuario {User1Id} envió solicitud a {User2Id}", user1Id, user2Id);
+        return await _friendshipRepository.AddAsync(friendship);
+    }
+
+    public async Task<Friendship> UpdateStatusAsync(int user1Id, int user2Id, FriendshipStatus status)
+    {
+        var friendship = await GetFriendshipAsync(user1Id, user2Id)
+            ?? throw new KeyNotFoundException("No se encontró la solicitud de amistad.");
+
+        friendship.Status = status;
+        friendship.UpdatedAt = DateTime.UtcNow;
+
+        _logger.LogInformation("Amistad entre {User1Id} y {User2Id} actualizada a {Status}", user1Id, user2Id, status);
+        return await _friendshipRepository.UpdateAsync(friendship);
+    }
+
+    public async Task<bool> DeleteFriendshipAsync(int user1Id, int user2Id)
+    {
+        var friendship = await GetFriendshipAsync(user1Id, user2Id)
+            ?? throw new KeyNotFoundException("No se encontró la amistad.");
+
+        _logger.LogInformation("Eliminando amistad entre {User1Id} y {User2Id}", user1Id, user2Id);
+        return await _friendshipRepository.DeleteAsync(friendship);
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/FriendshipService.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Services/LikeService.cs ---
 using System;
@@ -15268,6 +16235,202 @@ public class CommentService : ICommentService
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/CommentService.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Services/EventAttendeeService.cs ---
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.Domain.Interfaces.Services;
+
+namespace UniParche.Domain.Services;
+
+/// <summary>
+/// Servicio que gestiona la lógica de negocio relacionada 
+/// con los asistentes de un parche (evento).
+/// </summary>
+public class EventAttendeeService : IEventAttendeeService
+{
+	// ========== Dependencias ==========
+
+	private readonly IEventAttendeeRepository _attendeeRepository;
+	private readonly IEventRepository _eventRepository;
+
+	public EventAttendeeService(
+		IEventAttendeeRepository attendeeRepository,
+		IEventRepository eventRepository)
+	{
+		_attendeeRepository = attendeeRepository;
+		_eventRepository = eventRepository;
+	}
+
+	// ========== Consultas ==========
+
+	/// <summary>
+	/// Retorna todos los asistentes de un parche específico
+	/// </summary>
+	public async Task<IEnumerable<EventAttendee>> GetByEventAsync(int eventId)
+		=> await _attendeeRepository.GetByEventAsync(eventId);
+
+	/// <summary>
+	/// Retorna todos los parches a los que se ha inscrito un usuario
+	/// </summary>
+	public async Task<IEnumerable<EventAttendee>> GetByUserAsync(int userId)
+		=> await _attendeeRepository.GetByUserAsync(userId);
+
+	// ========== Acciones ==========
+
+	/// <summary>
+	/// Inscribe a un usuario en un parche.
+	/// Valida que el parche exista y que el usuario no esté ya inscrito.
+	/// </summary>
+	public async Task<EventAttendee> JoinEventAsync(int eventId, int userId)
+	{
+		// Verificar que el parche existe
+		var eventExists = await _eventRepository.ExistsAsync(e => e.Id == eventId);
+		if (!eventExists)
+			throw new KeyNotFoundException($"El parche con ID {eventId} no existe.");
+
+		// Verificar que el usuario no esté ya inscrito
+		var alreadyJoined = await _attendeeRepository
+			.ExistsAsync(a => a.EventId == eventId && a.UserId == userId);
+		if (alreadyJoined)
+			throw new InvalidOperationException("El usuario ya está inscrito en este parche.");
+
+		// Crear la inscripción con estado pendiente por defecto
+		var attendee = new EventAttendee
+		{
+			EventId = eventId,
+			UserId = userId,
+			Status = "Pending"
+		};
+
+		return await _attendeeRepository.AddAsync(attendee);
+	}
+
+	/// <summary>
+	/// Actualiza el estado de asistencia de un usuario en un parche.
+	/// Estados válidos: Pending, Confirmed, Declined.
+	/// </summary>
+	public async Task UpdateStatusAsync(int eventId, int userId, string status)
+	{
+		var attendee = await _attendeeRepository.GetByEventAndUserAsync(eventId, userId)
+			?? throw new KeyNotFoundException("La inscripción no fue encontrada.");
+
+		attendee.Status = status;
+		await _attendeeRepository.UpdateAsync(attendee);
+	}
+
+	/// <summary>
+	/// Elimina la inscripción de un usuario en un parche.
+	/// Lanza excepción si la inscripción no existe.
+	/// </summary>
+	public async Task LeaveEventAsync(int eventId, int userId)
+	{
+		var attendee = await _attendeeRepository.GetByEventAndUserAsync(eventId, userId)
+			?? throw new KeyNotFoundException("La inscripción no fue encontrada.");
+
+		await _attendeeRepository.DeleteAsync(attendee);
+	}
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/EventAttendeeService.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Services/GroupMemberService.cs ---
+using UniParche.Domain.Entities;
+using UniParche.Domain.Interfaces.Repositories;
+using UniParche.Domain.Interfaces.Services;
+
+namespace UniParche.Domain.Services;
+
+/// <summary>
+/// Servicio que gestiona la lógica de negocio relacionada
+/// con los miembros de un grupo universitario.
+/// </summary>
+public class GroupMemberService : IGroupMemberService
+{
+    // ========== Dependencias ==========
+
+    private readonly IGroupMemberRepository _memberRepository;
+    private readonly IGroupRepository _groupRepository;
+
+    public GroupMemberService(
+        IGroupMemberRepository memberRepository,
+        IGroupRepository groupRepository)
+    {
+        _memberRepository = memberRepository;
+        _groupRepository = groupRepository;
+    }
+
+    // ========== Consultas ==========
+
+    /// <summary>
+    /// Retorna todos los miembros de un grupo específico
+    /// </summary>
+    public async Task<IEnumerable<GroupMember>> GetByGroupAsync(int groupId)
+        => await _memberRepository.GetByGroupAsync(groupId);
+
+    /// <summary>
+    /// Retorna todos los grupos a los que pertenece un usuario
+    /// </summary>
+    public async Task<IEnumerable<GroupMember>> GetByUserAsync(int userId)
+        => await _memberRepository.GetByUserAsync(userId);
+
+    // ========== Acciones ==========
+
+    /// <summary>
+    /// Agrega un usuario como miembro de un grupo.
+    /// Valida que el grupo exista y que el usuario no sea ya miembro.
+    /// </summary>
+    public async Task<GroupMember> JoinGroupAsync(int groupId, int userId)
+    {
+        // Verificar que el grupo existe
+        var groupExists = await _groupRepository.ExistsAsync(g => g.Id == groupId);
+        if (!groupExists)
+            throw new KeyNotFoundException($"El grupo con ID {groupId} no existe.");
+
+        // Verificar que el usuario no sea ya miembro
+        var alreadyMember = await _memberRepository
+            .ExistsAsync(m => m.GroupId == groupId && m.UserId == userId);
+        if (alreadyMember)
+            throw new InvalidOperationException("El usuario ya es miembro de este grupo.");
+
+        // Crear la membresía con rol básico por defecto
+        var member = new GroupMember
+        {
+            GroupId = groupId,
+            UserId = userId,
+            Role = "Member"
+        };
+
+        return await _memberRepository.AddAsync(member);
+    }
+
+    /// <summary>
+    /// Actualiza el rol de un miembro dentro del grupo.
+    /// Roles válidos: Member, Moderator, Admin.
+    /// </summary>
+    public async Task UpdateRoleAsync(int groupId, int userId, string role)
+    {
+        var member = await _memberRepository.GetByGroupAndUserAsync(groupId, userId)
+            ?? throw new KeyNotFoundException("El miembro no fue encontrado en este grupo.");
+
+        member.Role = role;
+        await _memberRepository.UpdateAsync(member);
+    }
+
+    /// <summary>
+    /// Elimina la membresía de un usuario en un grupo.
+    /// Lanza excepción si el usuario no es miembro.
+    /// </summary>
+    public async Task LeaveGroupAsync(int groupId, int userId)
+    {
+        var member = await _memberRepository.GetByGroupAndUserAsync(groupId, userId)
+            ?? throw new KeyNotFoundException("El miembro no fue encontrado en este grupo.");
+
+        await _memberRepository.DeleteAsync(member);
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Services/GroupMemberService.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Entities/Like.cs ---
 ﻿namespace UniParche.Domain.Entities;
 
@@ -15352,6 +16515,35 @@ public class University : AuditBase
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Entities/University.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Entities/Event.cs ---
+<<<<<<< HEAD
+<<<<<<< HEAD
+using Uniparches.Domain.Enums;
+
+namespace UniParche.Domain.Entities;
+
+public class Event
+{
+    public int Id { get; set; }
+    public int CreatorId { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public string Location { get; set; }
+    public DateTime EventDate { get; set; }
+    public int Spots { get; set; }
+    public string ImageUrl { get; set; }
+    public EventStatus Status { get; set; } = EventStatus.Upcoming;
+    public GroupType Type { get; set; }
+    public int UniversityId { get; set; }
+    public User Creator { get; set; }
+
+    // navigation properties
+
+    public University University { get; set; }
+    public ICollection<EventAttendee> EventAttendees { get; set; } = new List<EventAttendee>();
+}
+=======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 using UniParche.Domain.Enums;
 
 namespace UniParche.Domain.Entities;
@@ -15373,7 +16565,13 @@ public class Event : AuditBase
     public User Creator { get; set; } = null!;
     public University University { get; set; } = null!;
     public ICollection<EventAttendee> EventAttendees { get; set; } = new List<EventAttendee>();
+<<<<<<< HEAD
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Entities/Event.cs ---
 
@@ -15401,6 +16599,23 @@ using UniParche.Domain.Enums;
 
 namespace UniParche.Domain.Entities;
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+public class Friendship
+{
+    public int Id { get; set; }
+    public int IdUser1 { get; set; }
+    public int IdUser2 { get; set; }
+    public FriendshipStatus Status { get; set; } = FriendshipStatus.Pending;
+    public DateTime Date { get; set; } = DateTime.UtcNow;
+
+    // Navigation properties
+    public User User1 { get; set; } = null!;
+    public User User2 { get; set; } = null!;
+}
+=======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 public class Friendship : AuditBase
 {
 	public int User1Id { get; set; }
@@ -15411,7 +16626,13 @@ public class Friendship : AuditBase
 	// Navigation properties
 	public User User1 { get; set; } = null!;
 	public User User2 { get; set; } = null!;
+<<<<<<< HEAD
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Entities/Friendship.cs ---
 
@@ -15433,21 +16654,45 @@ namespace UniParche.Domain.Entities;
 
 public class GroupMember : AuditBase
 {
-	public int GroupId { get; set; }
-	public int UserId { get; set; }
-	public GroupRole Role { get; set; } = GroupRole.Member;
-	public DateTime JoinDate { get; set; } = DateTime.UtcNow;
+    public int Id { get; set; }
+    public int GroupId { get; set; }
+    public int UserId { get; set; }
+    public string Role { get; set; } = "Member";
+    public DateTime JoinDate { get; set; } = DateTime.UtcNow;
 
-	// Navigation properties
-	public Group Group { get; set; } = null!;
-	public User User { get; set; } = null!;
+    // Navigation properties
+    public Group Group { get; set; } = null!;
+    public User User { get; set; } = null!;
 }
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Entities/GroupMember.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Entities/Group.cs ---
 using UniParche.Domain.Enums;
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+namespace Uniparche.Domain.Entities
+{
+    public class Group
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public int UniversityId { get; set; }
+        public string Subject { get; set; }
+        public int CreatorId { get; set; }
+        public GroupType Type { get; set; } = GroupType.Study;
+        // Navigation properties
+        public University University { get; set; }
+        public User Creator { get; set; }
+        public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
+    }
+}
+=======
+=======
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
 namespace UniParche.Domain.Entities;
 
 public class Group : AuditBase
@@ -15463,7 +16708,13 @@ public class Group : AuditBase
     public University University { get; set; } = null!;
     public User Creator { get; set; } = null!;
     public ICollection<GroupMember> Members { get; set; } = new List<GroupMember>();
+<<<<<<< HEAD
 }
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+=======
+}
+>>>>>>> 098b1416170f378db84d1e1b5fc6d1b0ca48244e
+
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Entities/Group.cs ---
 
@@ -15474,16 +16725,45 @@ namespace UniParche.Domain.Entities;
 
 public class EventAttendee : AuditBase
 {
+    public int Id { get; set; }
     public int UserId { get; set; }
     public int EventId { get; set; }
-    public AttendanceStatus Status { get; set; } = AttendanceStatus.Pending;
+    public string Status { get; set; } = "Pending";
 
     // Navigation properties
     public Event Event { get; set; } = null!;
     public User User { get; set; } = null!;
 }
 
+
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Entities/EventAttendee.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ IEventRepository.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Repositories;
+
+public interface IEventRepository : IGenericRepository<Event>
+{
+    // ========== Consultas Específicas de Parches ==========
+
+    /// <summary>
+    /// Obtiene todos los parches de una universidad específica
+    /// </summary>
+    Task<IEnumerable<Event>> GetByUniversityAsync(int universityId);
+
+    /// <summary>
+    /// Obtiene todos los parches creados por un usuario específico
+    /// </summary>
+    Task<IEnumerable<Event>> GetByCreatorAsync(int creatorId);
+
+    /// <summary>
+    /// Obtiene un parche con su lista completa de asistentes incluida
+    /// </summary>
+    Task<Event?> GetWithAttendeesAsync(int id);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ IEventRepository.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ILikeRepository.cs ---
 using UniParche.Domain.Entities;
@@ -15574,6 +16854,28 @@ public interface ILikeRepository : IGenericRepository<Like>
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ILikeRepository.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IGroupRepository.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Repositories;
+
+public interface IGroupRepository : IGenericRepository<Group>
+{
+    // ========== Consultas Específicas de Grupos ==========
+
+    /// <summary>
+    /// Obtiene todos los grupos pertenecientes a una universidad específica
+    /// </summary>
+    Task<IEnumerable<Group>> GetByUniversityAsync(int universityId);
+
+    /// <summary>
+    /// Obtiene un grupo con su lista completa de miembros incluida
+    /// </summary>
+    Task<Group?> GetWithMembersAsync(int id);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IGroupRepository.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ICommentRepository.cs ---
 ﻿using UniParche.Domain.Entities;
@@ -15752,6 +17054,58 @@ public class UniversityStatistics
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IUniversityRepository.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IFriendshipRepository.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Repositories;
+
+public interface IFriendshipRepository : IGenericRepository<Friendship>
+{
+    // ========== Consultas Específicas de Amistades ==========
+
+    /// <summary>
+    /// Obtiene todas las amistades de un usuario,
+    /// tanto las enviadas como las recibidas
+    /// </summary>
+    Task<IEnumerable<Friendship>> GetByUserAsync(int userId);
+
+    /// <summary>
+    /// Obtiene la relación de amistad entre dos usuarios específicos.
+    /// Retorna null si no existe relación entre ellos.
+    /// </summary>
+    Task<Friendship?> GetBetweenUsersAsync(int user1Id, int user2Id);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IFriendshipRepository.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IGroupMemberRepository.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Repositories;
+
+public interface IGroupMemberRepository : IGenericRepository<GroupMember>
+{
+    // ========== Consultas Específicas de Miembros ==========
+
+    /// <summary>
+    /// Obtiene todos los miembros de un grupo específico
+    /// </summary>
+    Task<IEnumerable<GroupMember>> GetByGroupAsync(int groupId);
+
+    /// <summary>
+    /// Obtiene todos los grupos a los que pertenece un usuario específico
+    /// </summary>
+    Task<IEnumerable<GroupMember>> GetByUserAsync(int userId);
+
+    /// <summary>
+    /// Obtiene la membresía de un usuario en un grupo específico.
+    /// Retorna null si el usuario no es miembro del grupo.
+    /// </summary>
+    Task<GroupMember?> GetByGroupAndUserAsync(int groupId, int userId);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IGroupMemberRepository.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IGenericRepository.cs ---
 ﻿using System.Linq.Expressions;
 using UniParche.Domain.Entities;
@@ -15843,6 +17197,34 @@ public interface IGenericRepository<T> where T : AuditBase
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IGenericRepository.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ IEventAttendeeRepository.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Repositories;
+
+public interface IEventAttendeeRepository : IGenericRepository<EventAttendee>
+{
+    // ========== Consultas Específicas de Asistentes ==========
+
+    /// <summary>
+    /// Obtiene todos los asistentes de un parche específico
+    /// </summary>
+    Task<IEnumerable<EventAttendee>> GetByEventAsync(int eventId);
+
+    /// <summary>
+    /// Obtiene todos los parches a los que asiste un usuario específico
+    /// </summary>
+    Task<IEnumerable<EventAttendee>> GetByUserAsync(int userId);
+
+    /// <summary>
+    /// Obtiene la asistencia de un usuario en un parche específico.
+    /// Retorna null si el usuario no está en el parche.
+    /// </summary>
+    Task<EventAttendee?> GetByEventAndUserAsync(int eventId, int userId);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/ IEventAttendeeRepository.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IPostRepository.cs ---
 using UniParche.Domain.Entities;
@@ -16096,6 +17478,71 @@ public class UserStatistics
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Repositories/IUserRepository.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IEventService.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Services;
+
+/// <summary>
+/// Contrato del servicio de eventos/parches
+/// </summary>
+public interface IEventService
+{
+	// ═══ Consultas ═══
+	Task<IEnumerable<Event>> GetAllEventsAsync();
+	Task<Event?> GetEventByIdAsync(int eventId);
+	Task<IEnumerable<Event>> GetEventsByUniversityAsync(int universityId);
+	Task<IEnumerable<Event>> GetEventsByCreatorAsync(int creatorId);
+
+	// ═══ Crear, Actualizar, Eliminar ═══
+	Task<Event> CreateEventAsync(Event entity, int creatorId);
+	Task<Event> UpdateEventAsync(Event entity);
+	Task<bool> DeleteEventAsync(int eventId);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IEventService.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IGroupMemberService.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Services;
+
+public interface IGroupMemberService
+{
+    // ========== Consultas ==========
+
+    /// <summary>
+    /// Obtiene todos los miembros de un grupo específico
+    /// </summary>
+    Task<IEnumerable<GroupMember>> GetByGroupAsync(int groupId);
+
+    /// <summary>
+    /// Obtiene todos los grupos a los que pertenece un usuario específico
+    /// </summary>
+    Task<IEnumerable<GroupMember>> GetByUserAsync(int userId);
+
+    // ========== Acciones ==========
+
+    /// <summary>
+    /// Agrega un usuario como miembro de un grupo.
+    /// Valida que el grupo exista y que el usuario no sea ya miembro.
+    /// </summary>
+    Task<GroupMember> JoinGroupAsync(int groupId, int userId);
+
+    /// <summary>
+    /// Actualiza el rol de un miembro dentro de un grupo
+    /// (Member, Moderator, Admin)
+    /// </summary>
+    Task UpdateRoleAsync(int groupId, int userId, string role);
+
+    /// <summary>
+    /// Elimina la membresía de un usuario en un grupo
+    /// </summary>
+    Task LeaveGroupAsync(int groupId, int userId);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IGroupMemberService.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IPostService.cs ---
 using System;
 using System.Collections.Generic;
@@ -16271,6 +17718,47 @@ public class PostStatistics
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IPostService.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IEventAttendeeService.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Services;
+
+public interface IEventAttendeeService
+{
+	// ========== Consultas ==========
+
+	/// <summary>
+	/// Obtiene todos los asistentes de un parche específico
+	/// </summary>
+	Task<IEnumerable<EventAttendee>> GetByEventAsync(int eventId);
+
+	/// <summary>
+	/// Obtiene todos los parches a los que asiste un usuario específico
+	/// </summary>
+	Task<IEnumerable<EventAttendee>> GetByUserAsync(int userId);
+
+	// ========== Acciones ==========
+
+	/// <summary>
+	/// Registra a un usuario como asistente de un parche.
+	/// Valida que haya cupos disponibles y que no esté ya inscrito.
+	/// </summary>
+	Task<EventAttendee> JoinEventAsync(int eventId, int userId);
+
+	/// <summary>
+	/// Actualiza el estado de asistencia de un usuario en un parche
+	/// (Pending, Confirmed, Declined)
+	/// </summary>
+	Task UpdateStatusAsync(int eventId, int userId, string status);
+
+	/// <summary>
+	/// Elimina la inscripción de un usuario en un parche
+	/// </summary>
+	Task LeaveEventAsync(int eventId, int userId);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IEventAttendeeService.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/ILikeService.cs ---
 using System;
@@ -16623,6 +18111,30 @@ public interface IUniversityService
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IUniversityService.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IGroupService.cs ---
+using UniParche.Domain.Entities;
+
+namespace UniParche.Domain.Interfaces.Services;
+
+/// <summary>
+/// Contrato del servicio de grupos de estudio
+/// </summary>
+public interface IGroupService
+{
+    // ═══ Consultas ═══
+    Task<IEnumerable<Group>> GetAllGroupsAsync();
+    Task<Group?> GetGroupByIdAsync(int groupId);
+    Task<IEnumerable<Group>> GetGroupsByUniversityAsync(int universityId);
+    Task<IEnumerable<Group>> GetGroupsByCreatorAsync(int creatorId);
+
+    // ═══ Crear, Actualizar, Eliminar ═══
+    Task<Group> CreateGroupAsync(Group entity, int creatorId);
+    Task<Group> UpdateGroupAsync(Group entity);
+    Task<bool> DeleteGroupAsync(int groupId);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IGroupService.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/ICommentService.cs ---
 using System;
 using System.Collections.Generic;
@@ -16963,6 +18475,30 @@ public interface IUserService
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IUserService.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IFriendshipService.cs ---
+using UniParche.Domain.Entities;
+using UniParche.Domain.Enums;
+
+namespace UniParche.Domain.Interfaces.Services;
+
+/// <summary>
+/// Contrato del servicio de amistades
+/// </summary>
+public interface IFriendshipService
+{
+	// ═══ Consultas ═══
+	Task<IEnumerable<Friendship>> GetFriendsByUserAsync(int userId);
+	Task<Friendship?> GetFriendshipAsync(int user1Id, int user2Id);
+	Task<IEnumerable<Friendship>> GetPendingRequestsAsync(int userId);
+
+	// ═══ Acciones ═══
+	Task<Friendship> SendRequestAsync(int user1Id, int user2Id);
+	Task<Friendship> UpdateStatusAsync(int user1Id, int user2Id, FriendshipStatus status);
+	Task<bool> DeleteFriendshipAsync(int user1Id, int user2Id);
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.Domain/Interfaces/Services/IFriendshipService.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/obj/UniParche.API.csproj.nuget.dgspec.json ---
 {
@@ -22498,7 +24034,7 @@ global using System.Threading.Tasks;
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/obj/Debug/net10.0/UniParche.API.GlobalUsings.g.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/obj/Debug/net10.0/UniParche.API.AssemblyInfoInputs.cache ---
-d6427323f6c2bd222b3a0181e91dedbeb909cac90bdf2dbec7e7a0c47b90fb77
+04e6e9d6fc4a729b1cb9ae212197c2b782b16a3ba77a3c5cdafaed67ffc20317
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/obj/Debug/net10.0/UniParche.API.AssemblyInfoInputs.cache ---
@@ -22618,7 +24154,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UniParche.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bd8e96bc395768e7269cdf6f954ea7481fbc1893")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0291010ee827fdeb658825fef96cd66177376651")]
 [assembly: System.Reflection.AssemblyProductAttribute("UniParche.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UniParche.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
@@ -22706,6 +24242,147 @@ public class CommentResponse
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/CommentResponse.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/GroupResponse.cs ---
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Response;
+
+/// <summary>
+/// DTO de respuesta para información de un grupo
+/// </summary>
+public class GroupResponse
+{
+    /// <summary>
+    /// ID del grupo
+    /// </summary>
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Nombre del grupo
+    /// </summary>
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Descripción del grupo
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Materia del grupo
+    /// </summary>
+    public string Subject { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Tipo de grupo (Study, Social, etc.)
+    /// </summary>
+    public GroupType Type { get; set; }
+
+    /// <summary>
+    /// ID del creador
+    /// </summary>
+    public int CreatorId { get; set; }
+
+    /// <summary>
+    /// Nombre del creador
+    /// </summary>
+    public string CreatorName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// ID de la universidad
+    /// </summary>
+    public int UniversityId { get; set; }
+
+    /// <summary>
+    /// Cuántos miembros tiene el grupo
+    /// </summary>
+    public int MemberCount { get; set; }
+
+    /// <summary>
+    /// Fecha de creación
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/GroupResponse.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/EventResponse.cs ---
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Response;
+
+/// <summary>
+/// DTO de respuesta para información de un parche
+/// </summary>
+public class EventResponse
+{
+	/// <summary>
+	/// ID del parche
+	/// </summary>
+	public int Id { get; set; }
+
+	/// <summary>
+	/// Título del parche
+	/// </summary>
+	public string Title { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Descripción del parche
+	/// </summary>
+	public string Description { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Lugar donde se realiza el parche
+	/// </summary>
+	public string Location { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Fecha y hora del parche
+	/// </summary>
+	public DateTime EventDate { get; set; }
+
+	/// <summary>
+	/// Cupos disponibles
+	/// </summary>
+	public int Capacity { get; set; }
+
+	/// <summary>
+	/// URL de la imagen del parche
+	/// </summary>
+	public string? ImageUrl { get; set; }
+
+	/// <summary>
+	/// Estado del parche (Upcoming, Active, Cancelled, Finished)
+	/// </summary>
+	public EventStatus Status { get; set; }
+
+	/// <summary>
+	/// ID del usuario que creó el parche
+	/// </summary>
+	public int CreatorId { get; set; }
+
+	/// <summary>
+	/// Nombre del creador
+	/// </summary>
+	public string CreatorName { get; set; } = string.Empty;
+
+	/// <summary>
+	/// ID de la universidad
+	/// </summary>
+	public int UniversityId { get; set; }
+
+	/// <summary>
+	/// Cuántas personas ya se unieron al parche
+	/// </summary>
+	public int AttendeeCount { get; set; }
+
+	/// <summary>
+	/// Fecha de creación del registro
+	/// </summary>
+	public DateTime CreatedAt { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/EventResponse.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/ApiResponse.cs ---
 namespace UniParche.API.DTOs.Response;
@@ -22804,6 +24481,71 @@ public class PaginatedResponse<T>
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/ApiResponse.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/GroupMemberResponse.cs ---
+namespace UniParche.API.DTOs.Response;
+
+/// <summary>
+/// DTO de respuesta para los miembros de un grupo universitario
+/// </summary>
+public class GroupMemberResponse
+{
+    public int Id { get; set; }
+    public int GroupId { get; set; }
+    public string GroupName { get; set; } = string.Empty;
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Rol del miembro: Member, Moderator, Admin
+    /// </summary>
+    public string Role { get; set; } = string.Empty;
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/GroupMemberResponse.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/FriendshipResponse.cs ---
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Response;
+
+/// <summary>
+/// DTO de respuesta para información de una amistad
+/// </summary>
+public class FriendshipResponse
+{
+	/// <summary>
+	/// ID del usuario que envió la solicitud
+	/// </summary>
+	public int User1Id { get; set; }
+
+	/// <summary>
+	/// Nombre del usuario que envió la solicitud
+	/// </summary>
+	public string User1Name { get; set; } = string.Empty;
+
+	/// <summary>
+	/// ID del usuario que recibió la solicitud
+	/// </summary>
+	public int User2Id { get; set; }
+
+	/// <summary>
+	/// Nombre del usuario que recibió la solicitud
+	/// </summary>
+	public string User2Name { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Estado de la amistad (Pending, Accepted, Rejected)
+	/// </summary>
+	public FriendshipStatus Status { get; set; }
+
+	/// <summary>
+	/// Fecha en que se envió la solicitud
+	/// </summary>
+	public DateTime Date { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/FriendshipResponse.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/UserStatisticsResponse.cs ---
 namespace UniParche.API.DTOs.Response;
@@ -23099,6 +24841,42 @@ public class UniversityStatisticsResponse
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/UniversityStatisticsResponse.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/EventAttendeeResponse.cs ---
+namespace UniParche.API.DTOs.Response;
+
+/// <summary>
+/// DTO de respuesta para las inscripciones a un parche (evento)
+/// </summary>
+public class EventAttendeeResponse
+{
+    public int Id { get; set; }
+    public int EventId { get; set; }
+    public string EventTitle { get; set; } = string.Empty;
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Estado de la inscripción: Pending, Confirmed, Declined
+    /// </summary>
+    public string Status { get; set; } = string.Empty;
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Response/EventAttendeeResponse.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateFriendshipRequest.cs ---
+using System.ComponentModel.DataAnnotations;
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Request;
+
+public class UpdateFriendshipRequest
+{
+    [Required]
+    public FriendshipStatus Status { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateFriendshipRequest.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateUniversityRequest.cs ---
 namespace UniParche.API.DTOs.Request;
 
@@ -23148,6 +24926,22 @@ public class CreatePostRequest
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreatePostRequest.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateFriendshipRequest.cs ---
+using System.ComponentModel.DataAnnotations;
+
+namespace UniParche.API.DTOs.Request;
+
+public class CreateFriendshipRequest
+{
+	[Required]
+	public int User1Id { get; set; }
+
+	[Required]
+	public int User2Id { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateFriendshipRequest.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateUserRequest.cs ---
 namespace UniParche.API.DTOs.Request;
 
@@ -23179,6 +24973,45 @@ public class UpdateUserRequest
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateUserRequest.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateEventRequest.cs ---
+
+using System.ComponentModel.DataAnnotations;
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Request;
+
+/// <summary>
+/// DTO para crear evento se necesita de manera obligatoria  titulo , descripcion, lugar, fecha, capacidad, universidadId y creatorId
+/// </summary>
+
+public class CreateEventRequest
+{
+    [Required]
+    public string Title { get; set; } = string.Empty;
+
+    [Required]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    public string Location { get; set; } = string.Empty;
+
+    [Required]
+    public DateTime EventDate { get; set; }
+
+    [Range(1, 500)]
+    public int Capacity { get; set; }
+
+    public string ImageUrl { get; set; } = string.Empty;
+
+    [Required]
+    public int UniversityId { get; set; }
+
+    [Required]
+    public int CreatorId { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateEventRequest.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/PaginationRequest.cs ---
 namespace UniParche.API.DTOs.Request;
@@ -23254,6 +25087,63 @@ public class CreateUniversityRequest
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateUniversityRequest.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateGroupRequest.cs ---
+using System.ComponentModel.DataAnnotations;
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Request;
+
+/// <summary>
+/// DTO para editar un grupo, se necesita de manera obligatoria nombre, descripcion, materia (Subject) y elk typo de grupo si el usario asi lo quiere
+/// 
+public class UpdateGroupRequest
+{
+    [Required]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    public string Subject { get; set; } = string.Empty;
+
+    public GroupType Type { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateGroupRequest.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateEventRequest.cs ---
+using System.ComponentModel.DataAnnotations;
+using UniParche.Domain.Enums;
+
+//sumary
+// DTO para actualizar un evento, se necesita de manera obligatoria titulo , descripcion, lugar, fecha, capacidad, estado del evento
+namespace UniParche.API.DTOs.Request;
+
+public class UpdateEventRequest
+{
+	[Required]
+	public string Title { get; set; } = string.Empty;
+
+	[Required]
+	public string Description { get; set; } = string.Empty;
+
+	[Required]
+	public string Location { get; set; } = string.Empty;
+
+	[Required]
+	public DateTime EventDate { get; set; }
+
+	[Range(1, 500)]
+	public int Capacity { get; set; }
+
+	public string ImageUrl { get; set; } = string.Empty;
+
+	public EventStatus Status { get; set; }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateEventRequest.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/UpdateCommentRequest.cs ---
 namespace UniParche.API.DTOs.Request;
@@ -23340,6 +25230,36 @@ public class CreateUserRequest
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateUserRequest.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateGroupRequest.cs ---
+using System.ComponentModel.DataAnnotations;
+using UniParche.Domain.Enums;
+
+namespace UniParche.API.DTOs.Request;
+
+/// <summary>
+///  DTO para crear un grupo, se necesita de manera obligatoria nombre, descripcion, materia (Subject), universidadId y creatorId por defecto el tipo de grupo es de estudio 
+public class CreateGroupRequest
+{
+    [Required]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    public string Subject { get; set; } = string.Empty;
+
+    [Required]
+    public int UniversityId { get; set; }
+
+    [Required]
+    public int CreatorId { get; set; }
+
+    public GroupType Type { get; set; } = GroupType.Study;
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateGroupRequest.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/DTOs/Request/CreateLikeRequest.cs ---
 namespace UniParche.API.DTOs.Request;
@@ -23467,43 +25387,46 @@ namespace UniParche.API.Mappers;
 public class MappingProfile : Profile
 {
     public MappingProfile()
-        {
-            // User Mappings
-            CreateMap<CreateUserRequest, User>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.CareerName, opt => opt.MapFrom(src => src.CareerName))
-                .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.Semester))
-                .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
-                .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore())
-                .ForMember(dest => dest.RegisterTime, opt => opt.Ignore())
-                .ForMember(dest => dest.University, opt => opt.Ignore());
+    {
+        // ========== User Mappings ==========
 
-            CreateMap<UpdateUserRequest, User>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(dest => dest.CareerName, opt => opt.MapFrom(src => src.CareerName))
-                .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.Semester))
-                .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
-                .ForMember(dest => dest.Id, opt => opt.Ignore())
-                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
-                .ForMember(dest => dest.Email, opt => opt.Ignore())
-                .ForMember(dest => dest.UniversityId, opt => opt.Ignore())
-                .ForMember(dest => dest.RegisterTime, opt => opt.Ignore())
-                .ForMember(dest => dest.University, opt => opt.Ignore());
+        CreateMap<CreateUserRequest, User>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+            .ForMember(dest => dest.CareerName, opt => opt.MapFrom(src => src.CareerName))
+            .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.Semester))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+            .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore())
+            .ForMember(dest => dest.RegisterTime, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore());
 
-            CreateMap<User, UserResponse>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
-                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
-                .ForMember(dest => dest.CareerName, opt => opt.MapFrom(src => src.CareerName))
-                .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.Semester))
-                .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
-                .ForMember(dest => dest.RegisterDate, opt => opt.MapFrom(src => src.RegisterTime))
-                .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
-                .ForMember(dest => dest.UniversityName, opt => opt.MapFrom(src => src.University != null ? src.University.Name : string.Empty));
+        CreateMap<UpdateUserRequest, User>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+            .ForMember(dest => dest.CareerName, opt => opt.MapFrom(src => src.CareerName))
+            .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.Semester))
+            .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+            .ForMember(dest => dest.Email, opt => opt.Ignore())
+            .ForMember(dest => dest.UniversityId, opt => opt.Ignore())
+            .ForMember(dest => dest.RegisterTime, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore());
 
-        // University Mappings
+        CreateMap<User, UserResponse>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+            .ForMember(dest => dest.CareerName, opt => opt.MapFrom(src => src.CareerName))
+            .ForMember(dest => dest.Semester, opt => opt.MapFrom(src => src.Semester))
+            .ForMember(dest => dest.ProfilePictureUrl, opt => opt.MapFrom(src => src.ProfilePictureUrl))
+            .ForMember(dest => dest.RegisterDate, opt => opt.MapFrom(src => src.RegisterTime))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.UniversityName, opt => opt.MapFrom(src =>
+                src.University != null ? src.University.Name : string.Empty));
+
+        // ========== University Mappings ==========
+
         CreateMap<CreateUniversityRequest, University>()
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.DomainEmail, opt => opt.MapFrom(src => src.DomainEmail))
@@ -23519,10 +25442,11 @@ public class MappingProfile : Profile
         CreateMap<University, UniversityResponse>()
             .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.DomainEmail, opt => opt.MapFrom(src => src.DomainEmail))
-            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.MinValue)) // Placeholder
-            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.MinValue)); // Placeholder
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.MinValue))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.MinValue));
 
-        // Post Mappings
+        // ========== Post Mappings ==========
+
         CreateMap<CreatePostRequest, Post>()
             .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
             .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
@@ -23548,14 +25472,16 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
             .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
-            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => 0)) // Placeholder
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>
+                src.User != null ? src.User.UserName : string.Empty))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => 0))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-            .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => 0)) // Placeholder
-            .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => 0)) // Placeholder
+            .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => 0))
+            .ForMember(dest => dest.LikeCount, opt => opt.MapFrom(src => 0))
             .ForMember(dest => dest.IsLikedByCurrentUser, opt => opt.Ignore());
 
-        // Comment Mappings
+        // ========== Comment Mappings ==========
+
         CreateMap<CreateCommentRequest, Comment>()
             .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
@@ -23579,13 +25505,16 @@ public class MappingProfile : Profile
         CreateMap<Comment, CommentResponse>()
             .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
-            .ForMember(dest => dest.UserProfilePictureUrl, opt => opt.MapFrom(src => src.User != null ? src.User.ProfilePictureUrl : string.Empty))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>
+                src.User != null ? src.User.UserName : string.Empty))
+            .ForMember(dest => dest.UserProfilePictureUrl, opt => opt.MapFrom(src =>
+                src.User != null ? src.User.ProfilePictureUrl : string.Empty))
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
 
-        // Like Mappings
+        // ========== Like Mappings ==========
+
         CreateMap<CreateLikeRequest, Like>()
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
             .ForMember(dest => dest.ReactionType, opt => opt.MapFrom(src => src.ReactionType))
@@ -23596,12 +25525,163 @@ public class MappingProfile : Profile
 
         CreateMap<Like, LikeResponse>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.UserName : string.Empty))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>
+                src.User != null ? src.User.UserName : string.Empty))
             .ForMember(dest => dest.PostId, opt => opt.MapFrom(src => src.PostId))
             .ForMember(dest => dest.ReactionType, opt => opt.MapFrom(src => src.ReactionType));
+
+        // ========== Event Mappings ==========
+
+        CreateMap<CreateEventRequest, Event>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
+            .ForMember(dest => dest.EventDate, opt => opt.MapFrom(src => src.EventDate))
+            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.Status, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.EventAttendees, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateEventRequest, Event>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
+            .ForMember(dest => dest.EventDate, opt => opt.MapFrom(src => src.EventDate))
+            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.UniversityId, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.EventAttendees, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<Event, EventResponse>()
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Location, opt => opt.MapFrom(src => src.Location))
+            .ForMember(dest => dest.EventDate, opt => opt.MapFrom(src => src.EventDate))
+            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.Capacity))
+            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.CreatorId, opt => opt.MapFrom(src => src.CreatorId))
+            .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src =>
+                src.Creator != null ? src.Creator.UserName : string.Empty))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.AttendeeCount, opt => opt.MapFrom(src =>
+                src.EventAttendees != null ? src.EventAttendees.Count : 0))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
+        // ========== EventAttendee Mappings ==========
+
+        CreateMap<EventAttendee, EventAttendeeResponse>()
+            .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.EventId))
+            .ForMember(dest => dest.EventTitle, opt => opt.MapFrom(src =>
+                src.Event != null ? src.Event.Title : string.Empty))
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>
+                src.User != null ? src.User.UserName : string.Empty))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+
+        // ========== Group Mappings ==========
+
+        CreateMap<CreateGroupRequest, Group>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.Subject))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.Members, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateGroupRequest, Group>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.Subject))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatorId, opt => opt.Ignore())
+            .ForMember(dest => dest.UniversityId, opt => opt.Ignore())
+            .ForMember(dest => dest.Creator, opt => opt.Ignore())
+            .ForMember(dest => dest.University, opt => opt.Ignore())
+            .ForMember(dest => dest.Members, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<Group, GroupResponse>()
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.Subject, opt => opt.MapFrom(src => src.Subject))
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+            .ForMember(dest => dest.CreatorId, opt => opt.MapFrom(src => src.CreatorId))
+            .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src =>
+                src.Creator != null ? src.Creator.UserName : string.Empty))
+            .ForMember(dest => dest.UniversityId, opt => opt.MapFrom(src => src.UniversityId))
+            .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src =>
+                src.Members != null ? src.Members.Count : 0))
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt));
+
+        // ========== GroupMember Mappings ==========
+
+        CreateMap<GroupMember, GroupMemberResponse>()
+            .ForMember(dest => dest.GroupId, opt => opt.MapFrom(src => src.GroupId))
+            .ForMember(dest => dest.GroupName, opt => opt.MapFrom(src =>
+                src.Group != null ? src.Group.Name : string.Empty))
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src =>
+                src.User != null ? src.User.UserName : string.Empty))
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role));
+
+        // ========== Friendship Mappings ==========
+
+        CreateMap<CreateFriendshipRequest, Friendship>()
+            .ForMember(dest => dest.User1Id, opt => opt.MapFrom(src => src.User1Id))
+            .ForMember(dest => dest.User2Id, opt => opt.MapFrom(src => src.User2Id))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.Status, opt => opt.Ignore())
+            .ForMember(dest => dest.Date, opt => opt.Ignore())
+            .ForMember(dest => dest.User1, opt => opt.Ignore())
+            .ForMember(dest => dest.User2, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<UpdateFriendshipRequest, Friendship>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Id, opt => opt.Ignore())
+            .ForMember(dest => dest.User1Id, opt => opt.Ignore())
+            .ForMember(dest => dest.User2Id, opt => opt.Ignore())
+            .ForMember(dest => dest.Date, opt => opt.Ignore())
+            .ForMember(dest => dest.User1, opt => opt.Ignore())
+            .ForMember(dest => dest.User2, opt => opt.Ignore())
+            .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+            .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore());
+
+        CreateMap<Friendship, FriendshipResponse>()
+            .ForMember(dest => dest.User1Id, opt => opt.MapFrom(src => src.User1Id))
+            .ForMember(dest => dest.User1Name, opt => opt.MapFrom(src =>
+                src.User1 != null ? src.User1.UserName : string.Empty))
+            .ForMember(dest => dest.User2Id, opt => opt.MapFrom(src => src.User2Id))
+            .ForMember(dest => dest.User2Name, opt => opt.MapFrom(src =>
+                src.User2 != null ? src.User2.UserName : string.Empty))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date));
     }
 }
-
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/Mappers/MappingProfile.cs ---
 
@@ -23635,6 +25715,144 @@ public class MappingProfile : Profile
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/UniParche.API.csproj ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/GroupMembersController.cs ---
+using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using UniParche.Domain.Interfaces.Services;
+using UniParche.API.DTOs.Response;
+
+namespace UniParche.API.Controllers;
+
+/// <summary>
+/// Controlador para gestionar los miembros de un grupo
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class GroupMembersController : ControllerBase
+{
+    private readonly IGroupMemberService _memberService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<GroupMembersController> _logger;
+
+    public GroupMembersController(IGroupMemberService memberService, IMapper mapper, ILogger<GroupMembersController> logger)
+    {
+        _memberService = memberService;
+        _mapper = mapper;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Obtener todos los miembros de un grupo
+    /// </summary>
+    [HttpGet("group/{groupId}")]
+    public async Task<ActionResult<ApiResponse<List<GroupMemberResponse>>>> GetByGroup(int groupId)
+    {
+        try
+        {
+            var members = await _memberService.GetByGroupAsync(groupId);
+            var response = _mapper.Map<List<GroupMemberResponse>>(members);
+            return Ok(new ApiResponse<List<GroupMemberResponse>>(response, "Miembros obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener miembros del grupo");
+            return StatusCode(500, new ApiResponse<List<GroupMemberResponse>>("Error al obtener miembros", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Obtener todos los grupos de un usuario
+    /// </summary>
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<ApiResponse<List<GroupMemberResponse>>>> GetByUser(int userId)
+    {
+        try
+        {
+            var members = await _memberService.GetByUserAsync(userId);
+            var response = _mapper.Map<List<GroupMemberResponse>>(members);
+            return Ok(new ApiResponse<List<GroupMemberResponse>>(response, "Grupos del usuario obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener grupos del usuario");
+            return StatusCode(500, new ApiResponse<List<GroupMemberResponse>>("Error al obtener grupos", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Unirse a un grupo
+    /// </summary>
+    [HttpPost("group/{groupId}/user/{userId}")]
+    public async Task<ActionResult<ApiResponse<GroupMemberResponse>>> Join(int groupId, int userId)
+    {
+        try
+        {
+            var member = await _memberService.JoinGroupAsync(groupId, userId);
+            var response = _mapper.Map<GroupMemberResponse>(member);
+            return Ok(new ApiResponse<GroupMemberResponse>(response, "Te has unido al grupo exitosamente"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiResponse<GroupMemberResponse>(ex.Message));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<GroupMemberResponse>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al unirse al grupo");
+            return StatusCode(500, new ApiResponse<GroupMemberResponse>("Error al unirse al grupo", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Actualizar el rol de un miembro en el grupo
+    /// </summary>
+    [HttpPatch("group/{groupId}/user/{userId}/role")]
+    public async Task<ActionResult<ApiResponse<string>>> UpdateRole(int groupId, int userId, [FromQuery] string role)
+    {
+        try
+        {
+            await _memberService.UpdateRoleAsync(groupId, userId, role);
+            return Ok(new ApiResponse<string>("Rol actualizado exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar rol del miembro");
+            return StatusCode(500, new ApiResponse<string>("Error al actualizar rol", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Salir de un grupo
+    /// </summary>
+    [HttpDelete("group/{groupId}/user/{userId}")]
+    public async Task<ActionResult<ApiResponse<string>>> Leave(int groupId, int userId)
+    {
+        try
+        {
+            await _memberService.LeaveGroupAsync(groupId, userId);
+            return Ok(new ApiResponse<string>("Has salido del grupo exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al salir del grupo");
+            return StatusCode(500, new ApiResponse<string>("Error al salir del grupo", new List<string> { ex.Message }));
+        }
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/GroupMembersController.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/CommentsController.cs ---
 using Microsoft.AspNetCore.Mvc;
@@ -23801,6 +26019,144 @@ public class CommentsController : ControllerBase
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/CommentsController.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/EventAttendeesController.cs ---
+using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using UniParche.Domain.Interfaces.Services;
+using UniParche.API.DTOs.Response;
+
+namespace UniParche.API.Controllers;
+
+/// <summary>
+/// Controlador para gestionar los asistentes de un parche
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class EventAttendeesController : ControllerBase
+{
+    private readonly IEventAttendeeService _attendeeService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<EventAttendeesController> _logger;
+
+    public EventAttendeesController(IEventAttendeeService attendeeService, IMapper mapper, ILogger<EventAttendeesController> logger)
+    {
+        _attendeeService = attendeeService;
+        _mapper = mapper;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Obtener todos los asistentes de un parche
+    /// </summary>
+    [HttpGet("event/{eventId}")]
+    public async Task<ActionResult<ApiResponse<List<EventAttendeeResponse>>>> GetByEvent(int eventId)
+    {
+        try
+        {
+            var attendees = await _attendeeService.GetByEventAsync(eventId);
+            var response = _mapper.Map<List<EventAttendeeResponse>>(attendees);
+            return Ok(new ApiResponse<List<EventAttendeeResponse>>(response, "Asistentes obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener asistentes del parche");
+            return StatusCode(500, new ApiResponse<List<EventAttendeeResponse>>("Error al obtener asistentes", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Obtener todos los parches a los que asiste un usuario
+    /// </summary>
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<ApiResponse<List<EventAttendeeResponse>>>> GetByUser(int userId)
+    {
+        try
+        {
+            var attendees = await _attendeeService.GetByUserAsync(userId);
+            var response = _mapper.Map<List<EventAttendeeResponse>>(attendees);
+            return Ok(new ApiResponse<List<EventAttendeeResponse>>(response, "Inscripciones del usuario obtenidas exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener inscripciones del usuario");
+            return StatusCode(500, new ApiResponse<List<EventAttendeeResponse>>("Error al obtener inscripciones", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Inscribir un usuario en un parche
+    /// </summary>
+    [HttpPost("event/{eventId}/user/{userId}")]
+    public async Task<ActionResult<ApiResponse<EventAttendeeResponse>>> Join(int eventId, int userId)
+    {
+        try
+        {
+            var attendee = await _attendeeService.JoinEventAsync(eventId, userId);
+            var response = _mapper.Map<EventAttendeeResponse>(attendee);
+            return Ok(new ApiResponse<EventAttendeeResponse>(response, "Inscripción realizada exitosamente"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiResponse<EventAttendeeResponse>(ex.Message));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<EventAttendeeResponse>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al inscribir usuario en parche");
+            return StatusCode(500, new ApiResponse<EventAttendeeResponse>("Error al inscribir usuario", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Actualizar el estado de asistencia de un usuario en un parche
+    /// </summary>
+    [HttpPatch("event/{eventId}/user/{userId}/status")]
+    public async Task<ActionResult<ApiResponse<string>>> UpdateStatus(int eventId, int userId, [FromQuery] string status)
+    {
+        try
+        {
+            await _attendeeService.UpdateStatusAsync(eventId, userId, status);
+            return Ok(new ApiResponse<string>("Estado actualizado exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar estado de asistencia");
+            return StatusCode(500, new ApiResponse<string>("Error al actualizar estado", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Retirar la inscripción de un usuario en un parche
+    /// </summary>
+    [HttpDelete("event/{eventId}/user/{userId}")]
+    public async Task<ActionResult<ApiResponse<string>>> Leave(int eventId, int userId)
+    {
+        try
+        {
+            await _attendeeService.LeaveEventAsync(eventId, userId);
+            return Ok(new ApiResponse<string>("Inscripción eliminada exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al retirar inscripción");
+            return StatusCode(500, new ApiResponse<string>("Error al retirar inscripción", new List<string> { ex.Message }));
+        }
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/EventAttendeesController.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/PostsController.cs ---
 using Microsoft.AspNetCore.Mvc;
@@ -23987,6 +26343,125 @@ public class PostsController : ControllerBase
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/PostsController.cs ---
 
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/FriendshipsController.cs ---
+using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using UniParche.Domain.Interfaces.Services;
+using UniParche.API.DTOs.Request;
+using UniParche.API.DTOs.Response;
+
+namespace UniParche.API.Controllers;
+
+/// <summary>
+/// Controlador para gestionar las amistades entre usuarios
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class FriendshipsController : ControllerBase
+{
+    private readonly IFriendshipService _friendshipService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<FriendshipsController> _logger;
+
+    public FriendshipsController(IFriendshipService friendshipService, IMapper mapper, ILogger<FriendshipsController> logger)
+    {
+        _friendshipService = friendshipService;
+        _mapper = mapper;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Obtener todas las amistades de un usuario
+    /// </summary>
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<ApiResponse<List<FriendshipResponse>>>> GetByUser(int userId)
+    {
+        try
+        {
+            var friendships = await _friendshipService.GetByUserAsync(userId);
+            var response = _mapper.Map<List<FriendshipResponse>>(friendships);
+            return Ok(new ApiResponse<List<FriendshipResponse>>(response, "Amistades obtenidas exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener amistades del usuario");
+            return StatusCode(500, new ApiResponse<List<FriendshipResponse>>("Error al obtener amistades", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Enviar solicitud de amistad
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<ApiResponse<FriendshipResponse>>> SendRequest([FromBody] CreateFriendshipRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<FriendshipResponse>("Datos inválidos"));
+
+            var friendship = await _friendshipService.SendRequestAsync(request);
+            var response = _mapper.Map<FriendshipResponse>(friendship);
+            return Ok(new ApiResponse<FriendshipResponse>(response, "Solicitud de amistad enviada exitosamente"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new ApiResponse<FriendshipResponse>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al enviar solicitud de amistad");
+            return StatusCode(500, new ApiResponse<FriendshipResponse>("Error al enviar solicitud", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Actualizar el estado de una amistad (aceptar/rechazar)
+    /// </summary>
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult<ApiResponse<string>>> UpdateStatus(int id, [FromBody] UpdateFriendshipRequest request)
+    {
+        try
+        {
+            await _friendshipService.UpdateStatusAsync(id, request);
+            return Ok(new ApiResponse<string>("Estado de amistad actualizado exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar estado de amistad");
+            return StatusCode(500, new ApiResponse<string>("Error al actualizar estado", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Eliminar una amistad
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+    {
+        try
+        {
+            await _friendshipService.DeleteAsync(id);
+            return Ok(new ApiResponse<string>("Amistad eliminada exitosamente"));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new ApiResponse<string>(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar amistad");
+            return StatusCode(500, new ApiResponse<string>("Error al eliminar amistad", new List<string> { ex.Message }));
+        }
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/FriendshipsController.cs ---
+
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/LikesController.cs ---
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
@@ -24160,6 +26635,326 @@ public class LikesController : ControllerBase
 
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/LikesController.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/GroupsController.cs ---
+using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using UniParche.Domain.Interfaces.Services;
+using UniParche.API.DTOs.Request;
+using UniParche.API.DTOs.Response;
+
+namespace UniParche.API.Controllers;
+
+/// <summary>
+/// Controlador para gestionar los grupos universitarios
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class GroupsController : ControllerBase
+{
+    private readonly IGroupService _groupService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<GroupsController> _logger;
+
+    public GroupsController(IGroupService groupService, IMapper mapper, ILogger<GroupsController> logger)
+    {
+        _groupService = groupService;
+        _mapper = mapper;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Obtener todos los grupos
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<List<GroupResponse>>>> GetAll()
+    {
+        try
+        {
+            var groups = await _groupService.GetAllAsync();
+            var response = _mapper.Map<List<GroupResponse>>(groups);
+            return Ok(new ApiResponse<List<GroupResponse>>(response, "Grupos obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener grupos");
+            return StatusCode(500, new ApiResponse<List<GroupResponse>>("Error al obtener grupos", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Obtener un grupo por ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ApiResponse<GroupResponse>>> GetById(int id)
+    {
+        try
+        {
+            var group = await _groupService.GetByIdAsync(id);
+            if (group == null)
+                return NotFound(new ApiResponse<GroupResponse>("Grupo no encontrado"));
+
+            var response = _mapper.Map<GroupResponse>(group);
+            return Ok(new ApiResponse<GroupResponse>(response, "Grupo obtenido exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener grupo por ID");
+            return StatusCode(500, new ApiResponse<GroupResponse>("Error al obtener grupo", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Obtener grupos por universidad
+    /// </summary>
+    [HttpGet("university/{universityId}")]
+    public async Task<ActionResult<ApiResponse<List<GroupResponse>>>> GetByUniversity(int universityId)
+    {
+        try
+        {
+            var groups = await _groupService.GetByUniversityAsync(universityId);
+            var response = _mapper.Map<List<GroupResponse>>(groups);
+            return Ok(new ApiResponse<List<GroupResponse>>(response, "Grupos de la universidad obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener grupos por universidad");
+            return StatusCode(500, new ApiResponse<List<GroupResponse>>("Error al obtener grupos", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Crear un nuevo grupo
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<ApiResponse<GroupResponse>>> Create([FromBody] CreateGroupRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<GroupResponse>("Datos inválidos"));
+
+            var created = await _groupService.CreateAsync(request);
+            var response = _mapper.Map<GroupResponse>(created);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id },
+                new ApiResponse<GroupResponse>(response, "Grupo creado exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al crear grupo");
+            return StatusCode(500, new ApiResponse<GroupResponse>("Error al crear grupo", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Actualizar un grupo existente
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ApiResponse<GroupResponse>>> Update(int id, [FromBody] UpdateGroupRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<GroupResponse>("Datos inválidos"));
+
+            var updated = await _groupService.UpdateAsync(id, request);
+            if (updated == null)
+                return NotFound(new ApiResponse<GroupResponse>("Grupo no encontrado"));
+
+            var response = _mapper.Map<GroupResponse>(updated);
+            return Ok(new ApiResponse<GroupResponse>(response, "Grupo actualizado exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar grupo");
+            return StatusCode(500, new ApiResponse<GroupResponse>("Error al actualizar grupo", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Eliminar un grupo por ID
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+    {
+        try
+        {
+            var group = await _groupService.GetByIdAsync(id);
+            if (group == null)
+                return NotFound(new ApiResponse<string>("Grupo no encontrado"));
+
+            await _groupService.DeleteAsync(id);
+            return Ok(new ApiResponse<string>("Grupo eliminado exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar grupo");
+            return StatusCode(500, new ApiResponse<string>("Error al eliminar grupo", new List<string> { ex.Message }));
+        }
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/GroupsController.cs ---
+
+--- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/EventsController.cs ---
+using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using UniParche.Domain.Interfaces.Services;
+using UniParche.API.DTOs.Request;
+using UniParche.API.DTOs.Response;
+
+namespace UniParche.API.Controllers;
+
+/// <summary>
+/// Controlador para gestionar los parches (eventos universitarios)
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class EventsController : ControllerBase
+{
+    private readonly IEventService _eventService;
+    private readonly IMapper _mapper;
+    private readonly ILogger<EventsController> _logger;
+
+    public EventsController(IEventService eventService, IMapper mapper, ILogger<EventsController> logger)
+    {
+        _eventService = eventService;
+        _mapper = mapper;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Obtener todos los parches
+    /// </summary>
+    [HttpGet]
+    public async Task<ActionResult<ApiResponse<List<EventResponse>>>> GetAll()
+    {
+        try
+        {
+            var events = await _eventService.GetAllAsync();
+            var response = _mapper.Map<List<EventResponse>>(events);
+            return Ok(new ApiResponse<List<EventResponse>>(response, "Parches obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener parches");
+            return StatusCode(500, new ApiResponse<List<EventResponse>>("Error al obtener parches", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Obtener un parche por ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ApiResponse<EventResponse>>> GetById(int id)
+    {
+        try
+        {
+            var ev = await _eventService.GetByIdAsync(id);
+            if (ev == null)
+                return NotFound(new ApiResponse<EventResponse>("Parche no encontrado"));
+
+            var response = _mapper.Map<EventResponse>(ev);
+            return Ok(new ApiResponse<EventResponse>(response, "Parche obtenido exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener parche por ID");
+            return StatusCode(500, new ApiResponse<EventResponse>("Error al obtener parche", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Obtener parches por universidad
+    /// </summary>
+    [HttpGet("university/{universityId}")]
+    public async Task<ActionResult<ApiResponse<List<EventResponse>>>> GetByUniversity(int universityId)
+    {
+        try
+        {
+            var events = await _eventService.GetByUniversityAsync(universityId);
+            var response = _mapper.Map<List<EventResponse>>(events);
+            return Ok(new ApiResponse<List<EventResponse>>(response, "Parches de la universidad obtenidos exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al obtener parches por universidad");
+            return StatusCode(500, new ApiResponse<List<EventResponse>>("Error al obtener parches", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Crear un nuevo parche
+    /// </summary>
+    [HttpPost]
+    public async Task<ActionResult<ApiResponse<EventResponse>>> Create([FromBody] CreateEventRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<EventResponse>("Datos inválidos"));
+
+            var created = await _eventService.CreateAsync(request);
+            var response = _mapper.Map<EventResponse>(created);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id },
+                new ApiResponse<EventResponse>(response, "Parche creado exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al crear parche");
+            return StatusCode(500, new ApiResponse<EventResponse>("Error al crear parche", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Actualizar un parche existente
+    /// </summary>
+    [HttpPut("{id}")]
+    public async Task<ActionResult<ApiResponse<EventResponse>>> Update(int id, [FromBody] UpdateEventRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new ApiResponse<EventResponse>("Datos inválidos"));
+
+            var updated = await _eventService.UpdateAsync(id, request);
+            if (updated == null)
+                return NotFound(new ApiResponse<EventResponse>("Parche no encontrado"));
+
+            var response = _mapper.Map<EventResponse>(updated);
+            return Ok(new ApiResponse<EventResponse>(response, "Parche actualizado exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar parche");
+            return StatusCode(500, new ApiResponse<EventResponse>("Error al actualizar parche", new List<string> { ex.Message }));
+        }
+    }
+
+    /// <summary>
+    /// Eliminar un parche por ID
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<string>>> Delete(int id)
+    {
+        try
+        {
+            var ev = await _eventService.GetByIdAsync(id);
+            if (ev == null)
+                return NotFound(new ApiResponse<string>("Parche no encontrado"));
+
+            await _eventService.DeleteAsync(id);
+            return Ok(new ApiResponse<string>("Parche eliminado exitosamente"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al eliminar parche");
+            return StatusCode(500, new ApiResponse<string>("Error al eliminar parche", new List<string> { ex.Message }));
+        }
+    }
+}
+
+--- FIN DEL ARCHIVO: ./backend/UniParche.API/Controllers/EventsController.cs ---
 
 --- INICIO DEL ARCHIVO: ./backend/UniParche.API/Controllers/UniversitiesController.cs ---
 using Microsoft.AspNetCore.Mvc;
@@ -24589,20 +27384,30 @@ builder.Services.AddDbContext<UniParcheDbContext>(options =>
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Add Repositories
+// ========== Add Repositories ==========
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
 builder.Services.AddScoped<IPostRepository, PostRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IEventAttendeeRepository, EventAttendeeRepository>();
+builder.Services.AddScoped<IFriendshipRepository, FriendshipRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<IGroupMemberRepository, GroupMemberRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
-// Add Services
+// ========== Add Services ==========
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUniversityService, UniversityService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IEventAttendeeService, EventAttendeeService>();
+builder.Services.AddScoped<IFriendshipService, FriendshipService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IGroupMemberService, GroupMemberService>();
 
 // Add Helpers
 builder.Services.AddScoped<UserValidationHelper>();
@@ -24619,6 +27424,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UniParcheDbContext>();
+    await UniParche.DataAccess.Seeders.DataSeeder.SeedAsync(db);
+}
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
@@ -24626,7 +27437,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
 
 --- FIN DEL ARCHIVO: ./backend/UniParche.API/Program.cs ---
 

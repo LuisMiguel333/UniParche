@@ -3,33 +3,42 @@ const BASE_URL = 'http://localhost:5292/api'
 const parchesMock = [
   {
     id: 1,
-    titulo: 'Torneo de FIFA en el ITM',
-    lugar: 'Bloque 1 - Sala de sistemas',
-    fecha: 'Sábado 17 de Mayo · 2:00 PM',
-    cupos: 16,
-    inscritos: 9,
-    creador: 'Luis M.',
-    universidad: 'ITM',
+    title: 'Torneo de FIFA en el ITM',
+    location: 'Bloque 1 - Sala de sistemas',
+    eventDate: 'Sábado 17 de Mayo · 2:00 PM',
+    capacity: 16,
+    attendeeCount: 9,
+    creatorName: 'Luis M.',
+    universityId: 1,
+    status: 0,
+    description: '',
+    imageUrl: null,
   },
   {
     id: 2,
-    titulo: 'Salida al Parque Arví',
-    lugar: 'Metro Acevedo - Punto de encuentro',
-    fecha: 'Domingo 18 de Mayo · 8:00 AM',
-    cupos: 20,
-    inscritos: 15,
-    creador: 'Valentina R.',
-    universidad: 'UdeA',
+    title: 'Salida al Parque Arví',
+    location: 'Metro Acevedo - Punto de encuentro',
+    eventDate: 'Domingo 18 de Mayo · 8:00 AM',
+    capacity: 20,
+    attendeeCount: 15,
+    creatorName: 'Valentina R.',
+    universityId: 1,
+    status: 0,
+    description: '',
+    imageUrl: null,
   },
   {
     id: 3,
-    titulo: 'Noche de estudio parciales',
-    lugar: 'Biblioteca EAFIT - Sala grupal',
-    fecha: 'Viernes 16 de Mayo · 6:00 PM',
-    cupos: 10,
-    inscritos: 10,
-    creador: 'Daniela C.',
-    universidad: 'EAFIT',
+    title: 'Noche de estudio parciales',
+    location: 'Biblioteca EAFIT - Sala grupal',
+    eventDate: 'Viernes 16 de Mayo · 6:00 PM',
+    capacity: 10,
+    attendeeCount: 10,
+    creatorName: 'Daniela C.',
+    universityId: 1,
+    status: 0,
+    description: '',
+    imageUrl: null,
   },
 ]
 
@@ -38,17 +47,31 @@ const usarMock = true
 export const obtenerParches = async () => {
   if (usarMock) return parchesMock
 
-  const response = await fetch(`${BASE_URL}/parches`)
-  return response.json()
+  const response = await fetch(`${BASE_URL}/events`)
+  const data = await response.json()
+  return data.data
 }
 
 export const crearParche = async (nuevoParche) => {
-  if (usarMock) return { ...nuevoParche, id: Date.now() }
+  if (usarMock) return { ...nuevoParche, id: Date.now(), attendeeCount: 0, status: 0 }
 
-  const response = await fetch(`${BASE_URL}/parches`, {
+  const response = await fetch(`${BASE_URL}/events`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(nuevoParche),
   })
-  return response.json()
+  const data = await response.json()
+  return data.data
+}
+
+export const unirseAParche = async (eventId, userId = 1) => {
+  if (usarMock) return { id: Date.now(), eventId, userId, status: 0 }
+
+  const response = await fetch(`${BASE_URL}/eventattendees`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ eventId, userId, status: 0 }),
+  })
+  const data = await response.json()
+  return data.data
 }

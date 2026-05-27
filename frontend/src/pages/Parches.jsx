@@ -1,43 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { obtenerParches, crearParche, unirseAParche } from '../services/parches'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
 import { registerLocale } from 'react-datepicker'
 import { es } from 'date-fns/locale'
 
 registerLocale('es', es)
-
-const parchesMock = [
-  {
-    id: 1,
-    titulo: 'Torneo de FIFA en el ITM',
-    lugar: 'Bloque 1 - Sala de sistemas',
-    fecha: 'Sábado 17 de Mayo · 2:00 PM',
-    cupos: 16,
-    inscritos: 9,
-    creador: 'Luis M.',
-    universidad: 'ITM',
-  },
-  {
-    id: 2,
-    titulo: 'Salida al Parque Arví',
-    lugar: 'Metro Acevedo - Punto de encuentro',
-    fecha: 'Domingo 18 de Mayo · 8:00 AM',
-    cupos: 20,
-    inscritos: 15,
-    creador: 'Valentina R.',
-    universidad: 'UdeA',
-  },
-  {
-    id: 3,
-    titulo: 'Noche de estudio parciales',
-    lugar: 'Biblioteca EAFIT - Sala grupal',
-    fecha: 'Viernes 16 de Mayo · 6:00 PM',
-    cupos: 10,
-    inscritos: 10,
-    creador: 'Daniela C.',
-    universidad: 'EAFIT',
-  },
-]
 
 const formularioVacio = {
   titulo: '',
@@ -54,23 +22,30 @@ const erroresVacios = {
 }
 
 function TarjetaParche({ parche, onUnirse }) {
-  const lleno = parche.inscritos >= parche.cupos
+  const lleno = parche.attendeeCount >= parche.capacity
+
+  const fechaFormateada = typeof parche.eventDate === 'string'
+    ? parche.eventDate
+    : new Date(parche.eventDate).toLocaleDateString('es-CO', {
+        weekday: 'long', day: 'numeric', month: 'long',
+        hour: '2-digit', minute: '2-digit',
+      })
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-white font-semibold">{parche.titulo}</p>
-          <p className="text-gray-500 text-xs mt-1">{parche.universidad} · Organiza {parche.creador}</p>
+          <p className="text-white font-semibold">{parche.title}</p>
+          <p className="text-gray-500 text-xs mt-1">Organiza {parche.creatorName}</p>
         </div>
         <span className={`text-xs px-2 py-1 rounded-full ${lleno ? 'bg-red-900 text-red-400' : 'bg-green-900 text-green-400'}`}>
           {lleno ? 'Lleno' : 'Disponible'}
         </span>
       </div>
       <div className="flex flex-col gap-1">
-        <p className="text-gray-400 text-sm">📍 {parche.lugar}</p>
-        <p className="text-gray-400 text-sm">📅 {parche.fecha}</p>
-        <p className="text-gray-400 text-sm">👥 {parche.inscritos} / {parche.cupos} cupos</p>
+        <p className="text-gray-400 text-sm">📍 {parche.location}</p>
+        <p className="text-gray-400 text-sm">📅 {fechaFormateada}</p>
+        <p className="text-gray-400 text-sm">👥 {parche.attendeeCount} / {parche.capacity} cupos</p>
       </div>
       <button
         disabled={lleno}
@@ -107,10 +82,18 @@ function CampoFormulario({ label, name, value, onChange, error, type = 'text', p
 }
 
 function Parches() {
-  const [listaParches, setListaParches] = useState(parchesMock)
+  const [listaParches, setListaParches] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [formulario, setFormulario] = useState(formularioVacio)
   const [errores, setErrores] = useState(erroresVacios)
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    obtenerParches().then(data => {
+      setListaParches(data)
+      setCargando(false)
+    })
+  }, [])
 
   const handleChange = (e) => {
     setFormulario({ ...formulario, [e.target.name]: e.target.value })
@@ -154,39 +137,42 @@ function Parches() {
     return valido
   }
 
-  const crearParche = () => {
+  const handleCrear = async () => {
     if (!validar()) return
 
     const nuevoParche = {
-      id: listaParches.length + 1,
-      titulo: formulario.titulo.trim(),
-      lugar: formulario.lugar.trim(),
-      fecha: formulario.fecha.toLocaleDateString('es-CO', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-      cupos: parseInt(formulario.cupos),
-      inscritos: 0,
-      creador: 'Tú',
-      universidad: 'ITM',
+      title: formulario.titulo.trim(),
+      location: formulario.lugar.trim(),
+      eventDate: formulario.fecha.toISOString(),
+      capacity: parseInt(formulario.cupos),
+      attendeeCount: 0,
+      creatorName: 'Felipe Garces',
+      universityId: 1,
+      description: '',
+      status: 0,
     }
 
-    setListaParches([nuevoParche, ...listaParches])
+    const creado = await crearParche(nuevoParche)
+    setListaParches([creado, ...listaParches])
     setFormulario(formularioVacio)
     setErrores(erroresVacios)
     setMostrarFormulario(false)
   }
 
-  const unirseAlParche = (id) => {
+  const handleUnirse = async (id) => {
+    await unirseAParche(id)
     setListaParches(listaParches.map(p =>
-      p.id === id && p.inscritos < p.cupos
-        ? { ...p, inscritos: p.inscritos + 1 }
+      p.id === id && p.attendeeCount < p.capacity
+        ? { ...p, attendeeCount: p.attendeeCount + 1 }
         : p
     ))
   }
+
+  if (cargando) return (
+    <div className="flex items-center justify-center py-20">
+      <p className="text-gray-500 text-sm">Cargando parches...</p>
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -254,7 +240,7 @@ function Parches() {
             placeholder="Ej: 20"
           />
           <button
-            onClick={crearParche}
+            onClick={handleCrear}
             className="self-start text-sm px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
           >
             Publicar parche
@@ -266,7 +252,7 @@ function Parches() {
         <TarjetaParche
           key={parche.id}
           parche={parche}
-          onUnirse={unirseAlParche}
+          onUnirse={handleUnirse}
         />
       ))}
     </div>

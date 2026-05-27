@@ -1,57 +1,5 @@
-import { useState } from 'react'
-
-const gruposMock = [
-  {
-    id: 1,
-    nombre: 'Cálculo III - ITM',
-    materia: 'Cálculo',
-    universidad: 'ITM',
-    miembros: 12,
-    creador: 'Valentina Ríos',
-    unido: false,
-    rol: null,
-  },
-  {
-    id: 2,
-    nombre: 'Anatomía Primer Semestre',
-    materia: 'Anatomía',
-    universidad: 'UdeA',
-    miembros: 8,
-    creador: 'Sebastián Mora',
-    unido: false,
-    rol: null,
-  },
-  {
-    id: 3,
-    nombre: 'Finanzas Corporativas EAFIT',
-    materia: 'Finanzas',
-    universidad: 'EAFIT',
-    miembros: 5,
-    creador: 'Daniela Castro',
-    unido: false,
-    rol: null,
-  },
-  {
-    id: 4,
-    nombre: 'Programación Web - ITM',
-    materia: 'Programación',
-    universidad: 'ITM',
-    miembros: 9,
-    creador: 'Felipe Garces',
-    unido: false,
-    rol: null,
-  },
-  {
-    id: 5,
-    nombre: 'Estadística UdeA',
-    materia: 'Estadística',
-    universidad: 'UdeA',
-    miembros: 6,
-    creador: 'Sebastián Mora',
-    unido: false,
-    rol: null,
-  },
-]
+import { useState, useEffect } from 'react'
+import { obtenerGrupos, crearGrupo, unirseAGrupo } from '../services/grupos'
 
 const formularioVacio = {
   nombre: '',
@@ -65,37 +13,62 @@ const erroresVacios = {
   universidad: '',
 }
 
-const universidades = ['ITM', 'UdeA', 'EAFIT', 'UPB', 'CES', 'Unal', 'Otra']
+const universidades = [
+  { id: 1, nombre: 'ITM' },
+  { id: 2, nombre: 'UdeA' },
+  { id: 3, nombre: 'EAFIT' },
+  { id: 4, nombre: 'UPB' },
+  { id: 5, nombre: 'Unal' },
+]
 
 function TarjetaGrupo({ grupo, onUnirse }) {
+  const [unido, setUnido] = useState(false)
+  const [rol, setRol] = useState(null)
+  const [miembros, setMiembros] = useState(grupo.memberCount)
+
+  const handleToggle = async () => {
+    if (!unido) {
+      await onUnirse(grupo.id)
+      setUnido(true)
+      setRol('Miembro')
+      setMiembros(miembros + 1)
+    } else {
+      setUnido(false)
+      setRol(null)
+      setMiembros(miembros - 1)
+    }
+  }
+
+  const universidadNombre = universidades.find(u => u.id === grupo.universityId)?.nombre || 'Universidad'
+
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3 hover:border-gray-700 transition-colors">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-white font-semibold">{grupo.nombre}</p>
-          <p className="text-gray-500 text-xs mt-1">{grupo.universidad} · {grupo.materia}</p>
+          <p className="text-white font-semibold">{grupo.name}</p>
+          <p className="text-gray-500 text-xs mt-1">{universidadNombre} · {grupo.subject}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-            👥 {grupo.miembros} miembros
+            👥 {miembros} miembros
           </span>
-          {grupo.unido && (
+          {unido && (
             <span className="text-xs px-2 py-1 rounded-full bg-purple-900 text-purple-300">
-              {grupo.rol === 'Administrador' ? '👑 Administrador' : '🎓 Miembro'}
+              {rol === 'Administrador' ? '👑 Administrador' : '🎓 Miembro'}
             </span>
           )}
         </div>
       </div>
-      <p className="text-gray-500 text-xs">Creado por {grupo.creador}</p>
+      <p className="text-gray-500 text-xs">Creado por {grupo.creatorName}</p>
       <button
-        onClick={() => onUnirse(grupo.id)}
+        onClick={handleToggle}
         className={`self-start text-sm px-4 py-2 rounded-lg transition-colors ${
-          grupo.unido
+          unido
             ? 'bg-gray-700 text-gray-300 hover:bg-red-900 hover:text-red-400'
             : 'bg-purple-600 hover:bg-purple-700 text-white'
         }`}
       >
-        {grupo.unido ? 'Salir del grupo' : 'Unirme al grupo'}
+        {unido ? 'Salir del grupo' : 'Unirme al grupo'}
       </button>
     </div>
   )
@@ -120,17 +93,27 @@ function CampoFormulario({ label, name, value, onChange, error, placeholder }) {
 }
 
 function Grupos() {
-  const [listaGrupos, setListaGrupos] = useState(gruposMock)
+  const [listaGrupos, setListaGrupos] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [formulario, setFormulario] = useState(formularioVacio)
   const [errores, setErrores] = useState(erroresVacios)
+  const [cargando, setCargando] = useState(true)
   const [filtroUniversidad, setFiltroUniversidad] = useState('')
   const [filtroMateria, setFiltroMateria] = useState('')
 
+  useEffect(() => {
+    obtenerGrupos().then(data => {
+      setListaGrupos(data)
+      setCargando(false)
+    })
+  }, [])
+
   const gruposFiltrados = listaGrupos.filter(g => {
-    const porUniversidad = filtroUniversidad ? g.universidad === filtroUniversidad : true
+    const porUniversidad = filtroUniversidad
+      ? g.universityId === parseInt(filtroUniversidad)
+      : true
     const porMateria = filtroMateria
-      ? g.materia.toLowerCase().includes(filtroMateria.toLowerCase())
+      ? g.subject.toLowerCase().includes(filtroMateria.toLowerCase())
       : true
     return porUniversidad && porMateria
   })
@@ -166,40 +149,35 @@ function Grupos() {
     return valido
   }
 
-  const crearGrupo = () => {
+  const handleCrear = async () => {
     if (!validar()) return
 
     const nuevoGrupo = {
-      id: listaGrupos.length + 1,
-      nombre: formulario.nombre.trim(),
-      materia: formulario.materia.trim(),
-      universidad: formulario.universidad,
-      miembros: 1,
-      creador: 'Felipe Garces',
-      unido: true,
-      rol: 'Administrador',
+      name: formulario.nombre.trim(),
+      subject: formulario.materia.trim(),
+      universityId: parseInt(formulario.universidad),
+      memberCount: 1,
+      creatorName: 'Felipe Garces',
+      description: '',
+      type: 0,
     }
 
-    setListaGrupos([nuevoGrupo, ...listaGrupos])
+    const creado = await crearGrupo(nuevoGrupo)
+    setListaGrupos([{ ...creado, unido: true, rol: 'Administrador' }, ...listaGrupos])
     setFormulario(formularioVacio)
     setErrores(erroresVacios)
     setMostrarFormulario(false)
   }
 
-  const toggleGrupo = (id) => {
-    setListaGrupos(listaGrupos.map(g =>
-      g.id === id
-        ? {
-            ...g,
-            unido: !g.unido,
-            miembros: g.unido ? g.miembros - 1 : g.miembros + 1,
-            rol: g.unido ? null : 'Miembro',
-          }
-        : g
-    ))
+  const handleUnirse = async (id) => {
+    await unirseAGrupo(id)
   }
 
-  const universidadesUnicas = [...new Set(listaGrupos.map(g => g.universidad))]
+  if (cargando) return (
+    <div className="flex items-center justify-center py-20">
+      <p className="text-gray-500 text-sm">Cargando grupos...</p>
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -224,8 +202,8 @@ function Grupos() {
           className="bg-gray-800 text-gray-300 text-sm rounded-lg px-3 py-2 outline-none border border-gray-700 focus:border-purple-500"
         >
           <option value="">Todas las universidades</option>
-          {universidadesUnicas.map(u => (
-            <option key={u} value={u}>{u}</option>
+          {universidades.map(u => (
+            <option key={u.id} value={u.id}>{u.nombre}</option>
           ))}
         </select>
         <input
@@ -293,13 +271,13 @@ function Grupos() {
             >
               <option value="">Selecciona tu universidad</option>
               {universidades.map(u => (
-                <option key={u} value={u}>{u}</option>
+                <option key={u.id} value={u.id}>{u.nombre}</option>
               ))}
             </select>
             {errores.universidad && <p className="text-red-400 text-xs">{errores.universidad}</p>}
           </div>
           <button
-            onClick={crearGrupo}
+            onClick={handleCrear}
             className="self-start text-sm px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
           >
             Crear grupo
@@ -311,7 +289,7 @@ function Grupos() {
         <TarjetaGrupo
           key={grupo.id}
           grupo={grupo}
-          onUnirse={toggleGrupo}
+          onUnirse={handleUnirse}
         />
       ))}
     </div>

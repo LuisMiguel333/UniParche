@@ -49,7 +49,14 @@ export const crearGrupo = async (nuevoGrupo) => {
   const response = await fetch(`${BASE_URL}/groups`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(nuevoGrupo),
+    body: JSON.stringify({
+      Name: nuevoGrupo.name,
+      Description: nuevoGrupo.description || 'Sin descripción',
+      Subject: nuevoGrupo.subject,
+      UniversityId: nuevoGrupo.universityId || 1,
+      CreatorId: 1,
+      Type: 0,
+    }),
   })
   const data = await response.json()
   return data.data
@@ -58,10 +65,9 @@ export const crearGrupo = async (nuevoGrupo) => {
 export const unirseAGrupo = async (groupId, userId = 1) => {
   if (usarMock) return { id: Date.now(), groupId, userId, role: 0 }
 
-  const response = await fetch(`${BASE_URL}/groupmembers`, {
+  const response = await fetch(`${BASE_URL}/GroupMembers/group/${groupId}/user/${userId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ groupId, userId, role: 0 }),
   })
   const data = await response.json()
   return data.data

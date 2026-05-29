@@ -20,7 +20,9 @@ public class FriendshipRepository : GenericRepository<Friendship>, IFriendshipRe
     public async Task<IEnumerable<Friendship>> GetByUserAsync(int userId)
     {
         return await _dbSet
-            .Where(f => f.RequesterId == userId || f.AddresseeId == userId)
+            // Eliminado por Felipe //.Where(f => f.RequesterId == userId || f.AddresseeId == userId)
+            //La siguiente linea se agrego por Felipe (1 Linea)
+            .Where(f => f.User1Id == userId || f.User2Id == userId)
             .OrderByDescending(f => f.Id)
             .ToListAsync();
     }
@@ -35,7 +37,9 @@ public class FriendshipRepository : GenericRepository<Friendship>, IFriendshipRe
     {
         return await _dbSet
             .FirstOrDefaultAsync(f =>
-                (f.RequesterId == user1Id && f.AddresseeId == user2Id) ||
-                (f.RequesterId == user2Id && f.AddresseeId == user1Id));
+                // Eliminado por Felipe //(f.RequesterId == user1Id && f.AddresseeId == user2Id) ||
+                // Eliminado por Felipe //(f.RequesterId == user2Id && f.AddresseeId == user1Id));
+                (f.User1Id == user1Id && f.User2Id == user2Id) ||
+            (f.User1Id == user2Id && f.User2Id == user1Id));
     }
 }

@@ -138,26 +138,31 @@ function Parches() {
   }
 
   const handleCrear = async () => {
-    if (!validar()) return
+  if (!validar()) return
 
-    const nuevoParche = {
-      title: formulario.titulo.trim(),
-      location: formulario.lugar.trim(),
-      eventDate: formulario.fecha.toISOString(),
-      capacity: parseInt(formulario.cupos),
-      attendeeCount: 0,
-      creatorName: 'Felipe Garces',
-      universityId: 1,
-      description: '',
-      status: 0,
-    }
+  const nuevoParche = {
+    Title: formulario.titulo.trim(),
+    Description: 'Sin descripción',
+    Location: formulario.lugar.trim(),
+    EventDate: formulario.fecha.toISOString(),
+    Capacity: parseInt(formulario.cupos),
+    ImageUrl: '',
+    UniversityId: 1,
+    CreatorId: 1,
+  }
 
+  try {
     const creado = await crearParche(nuevoParche)
-    setListaParches([creado, ...listaParches])
+    if (creado) {
+      setListaParches([creado, ...listaParches])
+    }
     setFormulario(formularioVacio)
     setErrores(erroresVacios)
     setMostrarFormulario(false)
+  } catch (error) {
+    console.error('Error creando parche:', error)
   }
+}
 
   const handleUnirse = async (id) => {
     await unirseAParche(id)

@@ -214,16 +214,21 @@ function Feed() {
 
   useEffect(() => {
     const cargarDatos = async () => {
-      const posts = await obtenerPublicaciones()
-      setPublicaciones(posts)
-
-      const comentariosMap = {}
-      for (const post of posts) {
-        comentariosMap[post.id] = await obtenerComentarios(post.id)
-      }
-      setComentariosPorPost(comentariosMap)
-      setCargando(false)
+  try {
+    const posts = await obtenerPublicaciones()
+    const lista = posts || []
+    setPublicaciones(lista)
+    const comentariosMap = {}
+    for (const post of lista) {
+      comentariosMap[post.id] = await obtenerComentarios(post.id)
     }
+    setComentariosPorPost(comentariosMap)
+  } catch (error) {
+    console.error('Error cargando datos:', error)
+  } finally {
+    setCargando(false)
+  }
+}
     cargarDatos()
   }, [])
 
@@ -240,11 +245,13 @@ function Feed() {
   }
 
   const handleCrearPublicacion = async (contenido, conImagen) => {
-    const imagen = conImagen ? imagenesDemo[Math.floor(Math.random() * imagenesDemo.length)] : null
-    const nueva = await crearPublicacion(contenido, imagen)
+  const imagen = conImagen ? imagenesDemo[Math.floor(Math.random() * imagenesDemo.length)] : null
+  const nueva = await crearPublicacion(contenido, imagen)
+  if (nueva) {
     setPublicaciones([nueva, ...publicaciones])
     setComentariosPorPost({ [nueva.id]: [], ...comentariosPorPost })
   }
+}
 
   if (cargando) return (
     <div className="flex items-center justify-center py-20">

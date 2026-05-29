@@ -1,5 +1,7 @@
 const BASE_URL = 'http://localhost:5292/api'
 
+const usarMock = false
+
 const gruposMock = [
   {
     id: 1,
@@ -32,8 +34,6 @@ const gruposMock = [
     type: 0,
   },
 ]
-
-const usarMock = true
 
 export const obtenerGrupos = async () => {
   if (usarMock) return gruposMock

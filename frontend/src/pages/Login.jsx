@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const erroresVacios = {
@@ -11,7 +11,15 @@ function Login() {
   const [errores, setErrores] = useState(erroresVacios)
   const [cargando, setCargando] = useState(false)
   const [errorGeneral, setErrorGeneral] = useState('')
+  const [usuarios, setUsuarios] = useState([])
   const navigate = useNavigate()
+
+  useEffect(() => {
+    fetch('http://localhost:5292/api/users')
+      .then(r => r.json())
+      .then(data => setUsuarios(data.data || []))
+      .catch(() => {})
+  }, [])
 
   const handleChange = (e) => {
     setFormulario({ ...formulario, [e.target.name]: e.target.value })
@@ -51,9 +59,8 @@ function Login() {
     try {
       const response = await fetch('http://localhost:5292/api/users')
       const data = await response.json()
-      const usuarios = data.data || []
-
-      const usuario = usuarios.find(u => u.email === formulario.email)
+      const lista = data.data || []
+      const usuario = lista.find(u => u.email === formulario.email)
 
       if (!usuario) {
         setErrorGeneral('No existe una cuenta con ese correo')
@@ -63,7 +70,6 @@ function Login() {
 
       localStorage.setItem('usuario', JSON.stringify(usuario))
       navigate('/feed')
-
     } catch (error) {
       setErrorGeneral('Error al conectar con el servidor')
     } finally {
@@ -72,7 +78,7 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-purple-950 flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-sm flex flex-col gap-6">
         <div className="text-center flex flex-col gap-2">
           <Link to="/" className="text-3xl font-bold">
@@ -128,16 +134,34 @@ function Login() {
             {cargando ? 'Verificando...' : 'Entrar'}
           </button>
 
-          <div className="flex flex-col gap-2 text-center">
-            <p className="text-gray-500 text-xs">
-              ¿No tienes cuenta?{' '}
-              <Link to="/registro" className="text-purple-400 hover:underline">
-                Regístrate
-              </Link>
-            </p>
-            <p className="text-gray-600 text-xs">Prueba: carlos@udea.edu.co</p>
-          </div>
+          <p className="text-center text-gray-500 text-xs">
+            ¿No tienes cuenta?{' '}
+            <Link to="/registro" className="text-purple-400 hover:underline">
+              Regístrate
+            </Link>
+          </p>
         </div>
+
+        {usuarios.length > 0 && (
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex flex-col gap-3">
+            <p className="text-gray-500 text-xs font-medium">Usuarios disponibles</p>
+            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+              {usuarios.map(u => (
+                <button
+                  key={u.id}
+                  onClick={() => setFormulario({ email: u.email, password: 'abcd1234' })}
+                  className="flex items-center justify-between bg-gray-800 hover:bg-gray-700 rounded-lg px-3 py-2 transition-colors text-left"
+                >
+                  <div>
+                    <p className="text-white text-xs font-medium">{u.userName}</p>
+                    <p className="text-gray-500 text-xs">{u.email}</p>
+                  </div>
+                  <span className="text-gray-600 text-xs">→</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

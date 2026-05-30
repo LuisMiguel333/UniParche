@@ -35,10 +35,9 @@ export const crearParche = async (nuevoParche) => {
 export const unirseAParche = async (eventId, userId = 1) => {
   if (usarMock) return { id: Date.now(), eventId, userId, status: 0 }
 
-  const response = await fetch(`${BASE_URL}/eventattendees`, {
+  const response = await fetch(`${BASE_URL}/EventAttendees/event/${eventId}/user/${userId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ eventId, userId, status: 0 }),
   })
   const data = await response.json()
   return data.data

@@ -22,7 +22,17 @@ const erroresVacios = {
 }
 
 function TarjetaParche({ parche, onUnirse }) {
+  const [inscrito, setInscrito] = useState(false)
   const lleno = parche.attendeeCount >= parche.capacity
+
+  const handleClick = async () => {
+    if (inscrito) {
+      setInscrito(false)
+    } else {
+      await onUnirse(parche.id)
+      setInscrito(true)
+    }
+  }
 
   const fechaFormateada = typeof parche.eventDate === 'string'
     ? parche.eventDate
@@ -36,7 +46,7 @@ function TarjetaParche({ parche, onUnirse }) {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-white font-semibold">{parche.title}</p>
-          <p className="text-gray-500 text-xs mt-1">Organiza {parche.creatorName}</p>
+          <p className="text-gray-500 text-xs mt-1">Organiza {parche.creatorName || 'UniParche'}</p>
         </div>
         <span className={`text-xs px-2 py-1 rounded-full ${lleno ? 'bg-red-900 text-red-400' : 'bg-green-900 text-green-400'}`}>
           {lleno ? 'Lleno' : 'Disponible'}
@@ -48,15 +58,17 @@ function TarjetaParche({ parche, onUnirse }) {
         <p className="text-gray-400 text-sm">👥 {parche.attendeeCount} / {parche.capacity} cupos</p>
       </div>
       <button
-        disabled={lleno}
-        onClick={() => onUnirse(parche.id)}
+        disabled={lleno && !inscrito}
+        onClick={handleClick}
         className={`self-start text-sm px-4 py-2 rounded-lg transition-colors ${
-          lleno
+          inscrito
+            ? 'bg-gray-700 text-gray-300 hover:bg-red-900 hover:text-red-400'
+            : lleno
             ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
             : 'bg-purple-600 hover:bg-purple-700 text-white'
         }`}
       >
-        {lleno ? 'Sin cupos' : 'Unirme al parche'}
+        {inscrito ? 'Salir del parche' : lleno ? 'Sin cupos' : 'Unirme al parche'}
       </button>
     </div>
   )
@@ -165,13 +177,17 @@ function Parches() {
 }
 
   const handleUnirse = async (id) => {
+  try {
     await unirseAParche(id)
     setListaParches(listaParches.map(p =>
       p.id === id && p.attendeeCount < p.capacity
         ? { ...p, attendeeCount: p.attendeeCount + 1 }
         : p
     ))
+  } catch (error) {
+    console.error('Error al unirse:', error)
   }
+}
 
   if (cargando) return (
     <div className="flex items-center justify-center py-20">

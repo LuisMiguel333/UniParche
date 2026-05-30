@@ -37,10 +37,13 @@ export const obtenerComentarios = async (postId) => {
 export const crearComentario = async (postId, content, userId = 1) => {
   if (usarMock) return null
 
-  const response = await fetch(`${BASE_URL}/comments`, {
+  const response = await fetch(`${BASE_URL}/comments?userId=${userId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ content, postId, userId }),
+    body: JSON.stringify({
+      Content: content,
+      PostId: postId,
+    }),
   })
   const data = await response.json()
   return data.data

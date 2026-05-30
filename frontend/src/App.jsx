@@ -5,6 +5,7 @@ import Feed from './pages/Feed'
 import Parches from './pages/Parches'
 import Grupos from './pages/Grupos'
 import Login from './pages/Login'
+import Registro from './pages/Registro'
 
 function App() {
   return (
@@ -22,6 +23,8 @@ function App() {
                   <Route path="/parches" element={<Parches />} />
                   <Route path="/grupos" element={<Grupos />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/registro" element={<Registro />} />
+                  <Route path="/registro" element={<Registro />} />
                 </Routes>
               </main>
             </div>

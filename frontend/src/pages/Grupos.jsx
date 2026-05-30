@@ -46,7 +46,7 @@ function TarjetaGrupo({ grupo, onUnirse }) {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-white font-semibold">{grupo.name}</p>
-          <p className="text-gray-500 text-xs mt-1">{universidadNombre} · {grupo.subject}</p>
+          <p className="text-gray-500 text-xs">Creado por {grupo.creatorName || JSON.parse(localStorage.getItem('usuario') || '{}').userName || 'UniParche'}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">

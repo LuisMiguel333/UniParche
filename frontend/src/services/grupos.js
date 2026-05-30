@@ -1,42 +1,18 @@
 const BASE_URL = 'http://localhost:5292/api'
 
+const getUsuarioActual = () => {
+  try {
+    const usuario = localStorage.getItem('usuario')
+    return usuario ? JSON.parse(usuario) : { id: 1 }
+  } catch {
+    return { id: 1 }
+  }
+}
+
 const usarMock = false
 
-const gruposMock = [
-  {
-    id: 1,
-    name: 'Cálculo III - ITM',
-    subject: 'Cálculo',
-    universityId: 1,
-    memberCount: 12,
-    creatorName: 'Valentina Ríos',
-    description: '',
-    type: 0,
-  },
-  {
-    id: 2,
-    name: 'Anatomía Primer Semestre',
-    subject: 'Anatomía',
-    universityId: 2,
-    memberCount: 8,
-    creatorName: 'Sebastián Mora',
-    description: '',
-    type: 0,
-  },
-  {
-    id: 3,
-    name: 'Finanzas Corporativas EAFIT',
-    subject: 'Finanzas',
-    universityId: 3,
-    memberCount: 5,
-    creatorName: 'Daniela Castro',
-    description: '',
-    type: 0,
-  },
-]
-
 export const obtenerGrupos = async () => {
-  if (usarMock) return gruposMock
+  if (usarMock) return []
 
   const response = await fetch(`${BASE_URL}/groups`)
   const data = await response.json()
@@ -44,7 +20,9 @@ export const obtenerGrupos = async () => {
 }
 
 export const crearGrupo = async (nuevoGrupo) => {
-  if (usarMock) return { ...nuevoGrupo, id: Date.now(), memberCount: 1 }
+  if (usarMock) return null
+
+  const usuario = getUsuarioActual()
 
   const response = await fetch(`${BASE_URL}/groups`, {
     method: 'POST',
@@ -54,7 +32,7 @@ export const crearGrupo = async (nuevoGrupo) => {
       Description: nuevoGrupo.description || 'Sin descripción',
       Subject: nuevoGrupo.subject,
       UniversityId: nuevoGrupo.universityId || 1,
-      CreatorId: 1,
+      CreatorId: usuario.id,
       Type: 0,
     }),
   })
@@ -62,10 +40,12 @@ export const crearGrupo = async (nuevoGrupo) => {
   return data.data
 }
 
-export const unirseAGrupo = async (groupId, userId = 1) => {
-  if (usarMock) return { id: Date.now(), groupId, userId, role: 0 }
+export const unirseAGrupo = async (groupId) => {
+  if (usarMock) return null
 
-  const response = await fetch(`${BASE_URL}/GroupMembers/group/${groupId}/user/${userId}`, {
+  const usuario = getUsuarioActual()
+
+  const response = await fetch(`${BASE_URL}/GroupMembers/group/${groupId}/user/${usuario.id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   })

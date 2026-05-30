@@ -46,7 +46,7 @@ function TarjetaParche({ parche, onUnirse }) {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-white font-semibold">{parche.title}</p>
-          <p className="text-gray-500 text-xs mt-1">Organiza {parche.creatorName || 'UniParche'}</p>
+          <p className="text-gray-500 text-xs mt-1">Organiza {parche.creatorName || JSON.parse(localStorage.getItem('usuario') || '{}').userName || 'UniParche'}</p>
         </div>
         <span className={`text-xs px-2 py-1 rounded-full ${lleno ? 'bg-red-900 text-red-400' : 'bg-green-900 text-green-400'}`}>
           {lleno ? 'Lleno' : 'Disponible'}

@@ -1,5 +1,14 @@
 const BASE_URL = 'http://localhost:5292/api'
 
+const getUsuarioActual = () => {
+  try {
+    const usuario = localStorage.getItem('usuario')
+    return usuario ? JSON.parse(usuario) : { id: 1 }
+  } catch {
+    return { id: 1 }
+  }
+}
+
 const usarMock = false
 
 export const obtenerPublicaciones = async () => {
@@ -10,10 +19,12 @@ export const obtenerPublicaciones = async () => {
   return data.data
 }
 
-export const crearPublicacion = async (contenido, imageUrl = null, userId = 1) => {
+export const crearPublicacion = async (contenido, imageUrl = null) => {
   if (usarMock) return null
 
-  const response = await fetch(`${BASE_URL}/posts?userId=${userId}`, {
+  const usuario = getUsuarioActual()
+
+  const response = await fetch(`${BASE_URL}/posts?userId=${usuario.id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -34,10 +45,12 @@ export const obtenerComentarios = async (postId) => {
   return data.data || []
 }
 
-export const crearComentario = async (postId, content, userId = 1) => {
+export const crearComentario = async (postId, content) => {
   if (usarMock) return null
 
-  const response = await fetch(`${BASE_URL}/comments?userId=${userId}`, {
+  const usuario = getUsuarioActual()
+
+  const response = await fetch(`${BASE_URL}/comments?userId=${usuario.id}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -49,13 +62,15 @@ export const crearComentario = async (postId, content, userId = 1) => {
   return data.data
 }
 
-export const darLike = async (postId, userId = 1) => {
+export const darLike = async (postId) => {
   if (usarMock) return null
+
+  const usuario = getUsuarioActual()
 
   const response = await fetch(`${BASE_URL}/likes`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ postId, userId, reactionType: 0 }),
+    body: JSON.stringify({ postId, userId: usuario.id, reactionType: 0 }),
   })
   const data = await response.json()
   return data.data

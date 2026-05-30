@@ -3,19 +3,10 @@ import { Link } from 'react-router-dom'
 function Inicio() {
   const crearUsuariosPrueba = async () => {
     const usuarios = [
-      { UserName: 'felipegarces', Email: 'felipegarces@correo.com', Password: 'abcd1234', CareerName: 'Programación Web', Semester: 5, UniversityId: 1 },
-      { UserName: 'moisesgonzalez', Email: 'moisesgonzalez@correo.com', Password: 'abcd1234', CareerName: 'Programación Web', Semester: 5, UniversityId: 1 },
-      { UserName: 'miguelcardona', Email: 'miguelcardona@correo.com', Password: 'abcd1234', CareerName: 'Programación Web', Semester: 5, UniversityId: 1 },
-      { UserName: 'sofia_udea', Email: 'sofia@udea.edu.co', Password: 'abcd1234', CareerName: 'Medicina', Semester: 3, UniversityId: 1 },
-      { UserName: 'andres_eafit', Email: 'andres@eafit.edu.co', Password: 'abcd1234', CareerName: 'Administración', Semester: 6, UniversityId: 3 },
-      { UserName: 'camila_unal', Email: 'camila@unal.edu.co', Password: 'abcd1234', CareerName: 'Ingeniería Civil', Semester: 4, UniversityId: 2 },
-      { UserName: 'daniel_itm', Email: 'daniel@itm.edu.co', Password: 'abcd1234', CareerName: 'Electrónica', Semester: 7, UniversityId: 1 },
-      { UserName: 'valeria_upb', Email: 'valeria@upb.edu.co', Password: 'abcd1234', CareerName: 'Diseño Gráfico', Semester: 2, UniversityId: 4 },
-      { UserName: 'juan_udea', Email: 'juan@udea.edu.co', Password: 'abcd1234', CareerName: 'Derecho', Semester: 8, UniversityId: 1 },
-      { UserName: 'laura_eafit2', Email: 'laura2@eafit.edu.co', Password: 'abcd1234', CareerName: 'Psicología', Semester: 5, UniversityId: 3 },
-      { UserName: 'pablo_unal', Email: 'pablo@unal.edu.co', Password: 'abcd1234', CareerName: 'Física', Semester: 9, UniversityId: 2 },
-      { UserName: 'maria_itm', Email: 'maria@itm.edu.co', Password: 'abcd1234', CareerName: 'Sistemas', Semester: 6, UniversityId: 1 },
-      { UserName: 'carlos_upb', Email: 'carlos2@upb.edu.co', Password: 'abcd1234', CareerName: 'Arquitectura', Semester: 3, UniversityId: 4 },
+      { UserName: 'Felipe Garces', Email: 'felipegarces@correo.com', Password: 'abcd1234', CareerName: 'Programación Web', Semester: 5, UniversityId: 1 },
+      { UserName: 'Moises Gonzalez', Email: 'moisesgonzalez@correo.com', Password: 'abcd1234', CareerName: 'Programación Web', Semester: 5, UniversityId: 1 },
+      { UserName: 'Miguel Cardona', Email: 'miguelcardona@correo.com', Password: 'abcd1234', CareerName: 'Programación Web', Semester: 5, UniversityId: 1 },
+      { UserName: 'Usuario Prueba', Email: 'usuarioprueba@correo.com', Password: 'abcd1234', CareerName: 'Arquitectura', Semester: 3, UniversityId: 4 },
     ]
 
     let creados = 0
